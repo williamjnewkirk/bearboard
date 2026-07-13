@@ -24,6 +24,8 @@ import type {
 import type { AssignmentOverrides, RaceSplits, RepScheme, Splits } from './json';
 
 export type UUID = string;
+/** A Clerk user id (text, e.g. `user_2ab...`) â used directly as the user PK. */
+export type ClerkUserId = string;
 /** ISO-8601 timestamp with timezone. */
 export type Timestamp = string;
 /** Calendar date, `YYYY-MM-DD`. */
@@ -32,8 +34,8 @@ export type DateString = string;
 // --- Identity, teams, membership ---
 
 export interface User {
-  id: UUID;
-  clerk_id: string;
+  /** The Clerk user id; there is no separate uuid or clerk_id column. */
+  id: ClerkUserId;
   name: string;
   photo_url: string | null;
   class_year: string | null;
@@ -53,7 +55,7 @@ export interface Team {
 export interface TeamMember {
   id: UUID;
   team_id: UUID;
-  user_id: UUID;
+  user_id: ClerkUserId;
   role: Role;
   status: MemberStatus;
   joined_at: Timestamp;
@@ -320,7 +322,7 @@ export interface EventTarget {
 }
 
 export interface PushToken {
-  user_id: UUID;
+  user_id: ClerkUserId;
   expo_token: string;
   platform: PushPlatform;
 }

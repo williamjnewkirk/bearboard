@@ -12,13 +12,15 @@
   },
   "dependencies": {
     "@bearboard/shared": "*",
-    "expo": "~54.0.0",
-    "expo-status-bar": "~2.0.0",
-    "react": "19.0.0",
-    "react-native": "0.81.0"
+    "expo": "~54.0.35",
+    "expo-dev-client": "~6.0.21",
+    "expo-status-bar": "~3.0.0",
+    "expo-updates": "~29.0.18",
+    "react": "19.1.0",
+    "react-native": "0.81.5"
   },
   "devDependencies": {
-    "@types/react": "^19.0.0",
-    "typescript": "^5.7.3"
+    "@types/react": "~19.1.0",
+    "typescript": "~5.9.2"
   }
 }

@@ -22,13 +22,63 @@ list in Â§7, never cutting the plan grid, sync, feed, or messaging.
 - **Never trust the client for authorization.** Every permission in the PRD
   Â§4.4 matrix is enforced by Supabase RLS, not app code. Add/adjust policies in
   a migration; app-side checks are UX only.
-- **Auth:** Clerk is the IdP, integrated as a Supabase third-party auth
-  provider. RLS resolves identity from the JWT `sub` claim via
-  `current_user_id()` â `users.clerk_id`. Team role/membership live in Postgres
-  (`team_members`), never in Clerk metadata.
+- **Auth:** Clerk is the IdP, shared across mobile + web. Clerk issues a JWT
+  from a template named `supabase`; app code sends it as
+  `Authorization: Bearer <token>` and RLS reads `auth.jwt() ->> 'sub'`.
+  **Clerk user ids are `text` (`user_...`), never uuid** â `users.id` stores the
+  Clerk id directly and every user-referencing column is text. Team
+  role/membership live in Postgres (`team_members`), never in Clerk metadata.
 - **Shared types import path:** `@bearboard/shared` (raw TS from `src`,
   transpiled by consumers â `transpilePackages` in Next, Metro resolves it for
   Expo). Don't build the package to consume it.
+
+## Conventions carried from Polyscope (the shipped predecessor app)
+
+Bearboard reuses the exact stack and process proven on Polyscope. Follow these
+as defaults unless told otherwise.
+
+**Stack baseline (proven versions):** Expo SDK 54 (`expo ~54`), React Native
+0.81.x, React 19.1, TypeScript ~5.9. Always check the SDK 54 docs
+(https://docs.expo.dev/versions/v54.0.0/) before writing Expo-specific code.
+Monitoring: Sentry (`@sentry/react-native`) + PostHog (`posthog-react-native`).
+Animations if needed: Reanimated ~4.1 + react-native-worklets + Gesture Handler
+v2. (Bearboard adds HealthKit / Health Connect, which Polyscope did not have.)
+
+**Clerk auth gotchas (learned the hard way):**
+
+- Google Sign-In uses the **native ID-token** flow (`@react-native-google-signin`,
+  `google_one_tap`), **not** browser OAuth (browser OAuth failed on Polyscope).
+- Apple Sign-In via `expo-apple-authentication` (required by App Store when other
+  social logins are offered).
+- **Every sign-up path must send `legalAccepted: true`** or Clerk stalls silently
+  in `missing_requirements`.
+
+**Supabase client pattern:**
+
+- Anon client for public data; a **fresh per-call** `getSupabaseWithToken(token)`
+  for authed/user data â **never cache the authed client**.
+- `supabase-js` v2 **never throws** â always check `{ data, error }` on every call.
+- Optimistic UI with rollback for mutations.
+
+**Secrets discipline (hard rule):** never put API keys/tokens in committed files
+(`eas.json`, `app.json`, source). Client-safe values via `EXPO_PUBLIC_*` /
+`NEXT_PUBLIC_*`; everything else via EAS Secrets / server env. When a change
+needs a secret set before a build works, **flag it as a pre-build action item**.
+
+**EAS build/release:** `eas.json` uses `appVersionSource: "remote"` with three
+profiles â three update channels: `development` (dev client, internal),
+`preview` (internal), `production` (autoIncrement, submit). Any native module
+(HealthKit / Health Connect) requires a **dev-client build**, never Expo Go.
+On Windows, iOS builds run in the cloud via EAS (no local Mac/Xcode); Android
+dev-client APKs from EAS sideload directly.
+
+**Config-plugin env vars that throw at build time** (e.g. a missing Google URL
+scheme) must be flagged as pre-build action items, not discovered at build.
+
+**App Store / Play privacy disclosures:** flag whenever a change adds an SDK,
+shares data with a new third party, or uses existing data for a new purpose.
+HealthKit / Health Connect additions in particular trigger new health-data
+disclosures.
 
 ## Non-negotiable privacy rules (enforce in RLS, not just UI)
 
@@ -70,7 +120,8 @@ list in Â§7, never cutting the plan grid, sync, feed, or messaging.
 
 ## Status (as of scaffold)
 
-`packages/shared` complete + typechecks. `apps/web` and `apps/mobile` are
-placeholders with deps declared but not installed. `supabase/0001_init.sql`
-written but not yet run against a live Postgres. Next up per PRD Â§7 Week 1:
-team create/join flows, roster + squads, first EAS builds.
+`packages/shared` complete + typechecks. Dependencies installed. `apps/web` and
+`apps/mobile` are placeholder entry points (no real screens yet); `eas init` has
+run (projectId + updates URL in `app.json`). `supabase/0001_init.sql` written but
+not yet run against a live Postgres. Next up per PRD Â§7 Week 1: Clerk+Supabase
+wiring, team create/join flows, roster + squads, first EAS dev-client build.

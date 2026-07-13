@@ -28,12 +28,13 @@ supabase db push        # apply pending migrations to the linked project
 
 ## Auth model
 
-Clerk is the identity provider, wired to Supabase as a **third-party auth
-provider**. The Clerk user id arrives in the JWT `sub` claim; `users.clerk_id`
-maps it to a Bearboard user. RLS helper functions (`current_user_id`,
-`is_team_member`, `is_team_coach`, `current_team_member`) resolve authorization
-from that claim. Configure the Clerk domain under `[auth.third_party.clerk]` in
-`config.toml` and in the hosted dashboard.
+Clerk is the identity provider, wired to Supabase via a JWT template named
+`supabase` (app code attaches the token as `Authorization: Bearer <token>`).
+The Clerk user id is **text** (`user_...`, never a uuid) and is used directly as
+`users.id`; all user-referencing columns are text. RLS helper functions
+(`current_user_id`, `is_team_member`, `is_team_coach`, `current_team_member`)
+compare straight to `auth.jwt() ->> 'sub'`. Configure the Clerk integration in
+the hosted dashboard (and `[auth.third_party.clerk]` in `config.toml` for local).
 
 ## RLS status (0001_init)
 

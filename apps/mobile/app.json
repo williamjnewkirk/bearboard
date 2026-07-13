@@ -10,7 +10,10 @@
     "ios": {
       "bundleIdentifier": "com.newkirktech.bearboard",
       "supportsTablet": false,
-      "deploymentTarget": "15.1"
+      "deploymentTarget": "15.1",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.newkirktech.bearboard",
@@ -19,8 +22,15 @@
     "plugins": [],
     "extra": {
       "eas": {
-        "projectId": "SET_AFTER_EAS_INIT"
+        "projectId": "7373ad84-4622-431e-8e6c-3a3078c7d9db"
       }
+    },
+    "owner": "newkirk1",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/7373ad84-4622-431e-8e6c-3a3078c7d9db"
     }
   }
 }

@@ -19,6 +19,16 @@ apps/mobile/android/
 web-build/
 expo-env.d.ts
 
+# Stray root-level native artifacts. The Expo project is apps/mobile; running
+# `expo prebuild`/`run:*` from the repo root generates these in the wrong place.
+/android/
+/ios/
+/app.json
+
+# Next.js generated
+next-env.d.ts
+.next/
+
 # Environment / secrets
 .env
 .env.local

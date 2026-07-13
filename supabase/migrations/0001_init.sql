@@ -1,9 +1,12 @@
 -- Bearboard schema v1 (PRD Â§6.2).
 --
--- Auth model: Clerk is the identity provider, integrated with Supabase as a
--- third-party auth provider. The Clerk user id arrives in the JWT `sub` claim;
--- `users.clerk_id` maps it to a Bearboard user. All authorization is enforced
--- here via RLS keyed on team membership + role â the client is never trusted.
+-- Auth model: Clerk is the identity provider, integrated with Supabase via a
+-- JWT template named "supabase". The Clerk user id (a TEXT value like
+-- `user_2ab...`, never a uuid) arrives in the JWT `sub` claim and IS the user
+-- primary key â `users.id` stores it directly and all user-referencing columns
+-- are text. RLS compares straight to `auth.jwt() ->> 'sub'`; no id indirection.
+-- All authorization is enforced here via RLS keyed on team membership + role â
+-- the client is never trusted. (Convention carried over from Polyscope.)
 --
 -- This migration creates the full schema and enables RLS on every table. The
 -- policies below cover the security-critical surfaces (team gating, coach-only
@@ -40,9 +43,9 @@ create type push_platform as enum ('ios', 'android');
 -- Identity, teams, membership
 -- ---------------------------------------------------------------------------
 
+-- id IS the Clerk user id (text, `user_...`). No separate clerk_id column.
 create table users (
-  id uuid primary key default gen_random_uuid(),
-  clerk_id text not null unique,
+  id text primary key,
   name text not null,
   photo_url text,
   class_year text,
@@ -62,7 +65,7 @@ create table teams (
 create table team_members (
   id uuid primary key default gen_random_uuid(),
   team_id uuid not null references teams (id) on delete cascade,
-  user_id uuid not null references users (id) on delete cascade,
+  user_id text not null references users (id) on delete cascade,
   role role not null,
   status member_status not null default 'active',
   joined_at timestamptz not null default now(),
@@ -357,7 +360,7 @@ create table event_targets (
 );
 
 create table push_tokens (
-  user_id uuid not null references users (id) on delete cascade,
+  user_id text not null references users (id) on delete cascade,
   expo_token text not null,
   platform push_platform not null,
   primary key (user_id, expo_token)
@@ -367,18 +370,19 @@ create table push_tokens (
 -- RLS helper functions
 --
 -- SECURITY DEFINER so they can read team_members regardless of the caller's
--- own policies. They resolve the Clerk `sub` claim -> users -> team_members.
+-- own policies. Identity comes straight from the Clerk `sub` claim (text).
 -- ---------------------------------------------------------------------------
 
+-- The current Clerk user id (text). Wrapped in a function for readability so
+-- policies read `current_user_id()` instead of the raw jwt accessor.
 create or replace function current_user_id()
-returns uuid
+returns text
 language sql
 stable
 security definer
 set search_path = public
 as $$
-  select u.id from users u
-  where u.clerk_id = (auth.jwt() ->> 'sub')
+  select auth.jwt() ->> 'sub'
 $$;
 
 -- Is the current user an ACTIVE member of the team (any role)?
