@@ -1,0 +1,3 @@
+-- Seed data for local dev / demo. Loaded by `supabase db reset`.
+-- Kept empty for now; the Week 2 demo seed (recreating Coach Stiles' summer
+-- email as a Bearboard week) will land here. Add inserts below as needed.

@@ -1,0 +1,26 @@
+{
+  "expo": {
+    "name": "Bearboard",
+    "slug": "bearboard",
+    "scheme": "bearboard",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "bundleIdentifier": "com.newkirktech.bearboard",
+      "supportsTablet": false,
+      "deploymentTarget": "15.1"
+    },
+    "android": {
+      "package": "com.newkirktech.bearboard",
+      "minSdkVersion": 29
+    },
+    "plugins": [],
+    "extra": {
+      "eas": {
+        "projectId": "SET_AFTER_EAS_INIT"
+      }
+    }
+  }
+}

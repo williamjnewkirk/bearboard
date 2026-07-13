@@ -1,0 +1,33 @@
+# Supabase local config. Full reference: https://supabase.com/docs/guides/cli/config
+project_id = "bearboard"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 15
+
+[studio]
+enabled = true
+port = 54323
+
+[storage]
+enabled = true
+file_size_limit = "10MiB"
+
+[auth]
+enabled = true
+# Clerk is the identity provider, integrated as a third-party auth provider.
+# Configure the Clerk domain here (or in the dashboard) before running locally:
+# [auth.third_party.clerk]
+# enabled = true
+# domain = "your-clerk-domain.clerk.accounts.dev"
+
+[realtime]
+enabled = true

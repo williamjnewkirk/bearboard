@@ -1,0 +1,30 @@
+{
+  "name": "bearboard",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Team training dashboard for collegiate cross country / track & field",
+  "author": "Will Newkirk <williamnewkirk2025@gmail.com>",
+  "license": "UNLICENSED",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "web": "npm run dev --workspace @bearboard/web",
+    "mobile": "npm run start --workspace @bearboard/mobile",
+    "shared:build": "npm run build --workspace @bearboard/shared",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,sql}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,sql}\"",
+    "db:diff": "supabase db diff",
+    "db:push": "supabase db push",
+    "db:reset": "supabase db reset"
+  },
+  "devDependencies": {
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.3"
+  }
+}
