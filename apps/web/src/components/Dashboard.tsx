@@ -156,7 +156,7 @@ export function Dashboard({
     <main className="mx-auto max-w-5xl p-6">
       <header className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">{membership.team.name}</h1>
+          <h1 className="text-2xl font-bold text-brand-maroon">{membership.team.name}</h1>
           <p className="text-sm text-gray-500">
             {membership.team.school ? `${membership.team.school} · ` : ''}
             You are a {membership.role}.
@@ -166,7 +166,7 @@ export function Dashboard({
       </header>
 
       {error ? (
-        <div className="mb-4 rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">
+        <div className="mb-4 rounded border border-brand-crimson/30 bg-brand-crimson/5 p-3 text-sm text-brand-crimson">
           {error}
         </div>
       ) : null}
@@ -180,20 +180,24 @@ export function Dashboard({
               return (
                 <div key={role} className="flex items-center gap-3">
                   <span className="w-16 text-sm capitalize text-gray-600">{role}</span>
-                  <code className="rounded bg-gray-100 px-3 py-1.5 text-lg tracking-widest">
+                  <code className="rounded bg-gray-100 px-3 py-1.5 text-lg font-semibold tracking-widest text-brand-forest">
                     {jc?.code ?? '—'}
                   </code>
                   {jc ? (
                     <button
                       onClick={() => void copyCode(jc.code)}
-                      className="rounded border px-2 py-1 text-xs"
+                      className={`rounded border px-2 py-1 text-xs ${
+                        copied === jc.code
+                          ? 'border-brand-green/40 text-brand-green'
+                          : 'border-gray-300 text-gray-700'
+                      }`}
                     >
                       {copied === jc.code ? 'Copied!' : 'Copy'}
                     </button>
                   ) : null}
                   <button
                     onClick={() => void regenerate(role)}
-                    className="rounded border px-2 py-1 text-xs text-red-700"
+                    className="rounded border border-brand-crimson/30 px-2 py-1 text-xs text-brand-crimson"
                     title="Invalidates the current code immediately"
                   >
                     Regenerate
@@ -221,7 +225,7 @@ export function Dashboard({
               />
               <button
                 onClick={() => void createSquad()}
-                className="rounded bg-gray-900 px-3 py-1 text-sm text-white"
+                className="rounded bg-brand-green px-3 py-1 text-sm text-white"
               >
                 Add squad
               </button>
@@ -242,7 +246,7 @@ export function Dashboard({
                         <span className="mr-1">{s.name}</span>
                         <button
                           onClick={() => void deleteSquad(s.id)}
-                          className="text-xs text-red-600"
+                          className="text-xs text-brand-crimson"
                           title={`Delete squad ${s.name}`}
                         >
                           ×
@@ -275,7 +279,7 @@ export function Dashboard({
                       {r.id !== myMemberId ? (
                         <button
                           onClick={() => void removeMember(r.id)}
-                          className="rounded border px-2 py-0.5 text-xs text-red-700"
+                          className="rounded border border-brand-crimson/30 px-2 py-0.5 text-xs text-brand-crimson"
                         >
                           Remove
                         </button>
@@ -290,7 +294,7 @@ export function Dashboard({
       </section>
 
       {!isCoach ? (
-        <button onClick={() => void leaveTeam()} className="text-sm text-red-700 underline">
+        <button onClick={() => void leaveTeam()} className="text-sm text-brand-crimson underline">
           Leave team
         </button>
       ) : null}

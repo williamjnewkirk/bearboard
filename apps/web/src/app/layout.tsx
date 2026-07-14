@@ -9,7 +9,14 @@ export const metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <ClerkProvider>
+    <ClerkProvider
+      appearance={{
+        variables: {
+          colorPrimary: '#971B2F', // brand maroon; keep in sync with tailwind.config.ts
+          colorDanger: '#BA0C2F', // brand crimson
+        },
+      }}
+    >
       <html lang="en">
         <body>{children}</body>
       </html>

@@ -5,6 +5,7 @@
  *   import { type Activity, DAY_TYPES, type RepScheme } from '@bearboard/shared';
  */
 
+export * from './colors';
 export * from './enums';
 export * from './json';
 export * from './rows';

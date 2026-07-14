@@ -1,4 +1,5 @@
 import { useSignIn, useSignUp } from '@clerk/clerk-expo';
+import { BRAND_COLORS } from '@bearboard/shared';
 import { useState } from 'react';
 import {
   ActivityIndicator,
@@ -179,7 +180,13 @@ function errorMessage(e: unknown): string {
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: 'center', padding: 24, gap: 12 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  title: { fontSize: 32, fontWeight: '700', textAlign: 'center', marginBottom: 8 },
+  title: {
+    fontSize: 32,
+    fontWeight: '700',
+    textAlign: 'center',
+    marginBottom: 8,
+    color: BRAND_COLORS.maroon,
+  },
   subtitle: { fontSize: 15, color: '#444', textAlign: 'center' },
   input: {
     borderWidth: 1,
@@ -190,12 +197,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   button: {
-    backgroundColor: '#1f6feb',
+    backgroundColor: BRAND_COLORS.maroon,
     borderRadius: 8,
     paddingVertical: 14,
     alignItems: 'center',
   },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  link: { color: '#1f6feb', textAlign: 'center', marginTop: 4 },
-  error: { color: '#c0392b', textAlign: 'center' },
+  buttonText: { color: BRAND_COLORS.white, fontSize: 16, fontWeight: '600' },
+  link: { color: BRAND_COLORS.maroon, textAlign: 'center', marginTop: 4 },
+  error: { color: BRAND_COLORS.crimson, textAlign: 'center' },
 });

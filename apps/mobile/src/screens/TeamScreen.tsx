@@ -1,4 +1,5 @@
 import { useAuth } from '@clerk/clerk-expo';
+import { BRAND_COLORS } from '@bearboard/shared';
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { useSupabase } from '../lib/useSupabase';
@@ -143,7 +144,7 @@ export function TeamScreen({
 const styles = StyleSheet.create({
   container: { flex: 1, paddingTop: 64, paddingHorizontal: 20 },
   header: { marginBottom: 16 },
-  title: { fontSize: 26, fontWeight: '700' },
+  title: { fontSize: 26, fontWeight: '700', color: BRAND_COLORS.maroon },
   subtitle: { fontSize: 14, color: '#666', marginTop: 2 },
   sectionTitle: { fontSize: 16, fontWeight: '700', marginTop: 12, marginBottom: 8 },
   codes: {
@@ -155,7 +156,7 @@ const styles = StyleSheet.create({
   },
   codeRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 4 },
   codeRole: { width: 64, color: '#666', textTransform: 'capitalize' },
-  codeValue: { fontSize: 18, fontWeight: '700', letterSpacing: 3 },
+  codeValue: { fontSize: 18, fontWeight: '700', letterSpacing: 3, color: BRAND_COLORS.forest },
   rosterRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -165,12 +166,12 @@ const styles = StyleSheet.create({
   },
   rosterName: { fontSize: 15, fontWeight: '500' },
   rosterMeta: { fontSize: 13, color: '#888' },
-  error: { color: '#c0392b', marginBottom: 8 },
+  error: { color: BRAND_COLORS.crimson, marginBottom: 8 },
   footer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingVertical: 16,
   },
-  leave: { color: '#c0392b', textDecorationLine: 'underline' },
+  leave: { color: BRAND_COLORS.crimson, textDecorationLine: 'underline' },
   signOut: { color: '#888', textDecorationLine: 'underline' },
 });

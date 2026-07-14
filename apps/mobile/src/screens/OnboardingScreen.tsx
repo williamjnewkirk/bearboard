@@ -1,4 +1,5 @@
 import { useAuth, useUser } from '@clerk/clerk-expo';
+import { BRAND_COLORS } from '@bearboard/shared';
 import { useState } from 'react';
 import {
   ActivityIndicator,
@@ -163,7 +164,7 @@ function PrimaryButton({
 
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: 'center', padding: 24, gap: 12 },
-  title: { fontSize: 32, fontWeight: '700', textAlign: 'center' },
+  title: { fontSize: 32, fontWeight: '700', textAlign: 'center', color: BRAND_COLORS.maroon },
   subtitle: { fontSize: 15, color: '#444', textAlign: 'center', marginBottom: 8 },
   tabs: { flexDirection: 'row', gap: 8, marginBottom: 4 },
   tab: {
@@ -174,9 +175,9 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     alignItems: 'center',
   },
-  tabActive: { backgroundColor: '#1f6feb', borderColor: '#1f6feb' },
+  tabActive: { backgroundColor: BRAND_COLORS.maroon, borderColor: BRAND_COLORS.maroon },
   tabText: { fontWeight: '600', color: '#333' },
-  tabTextActive: { color: '#fff' },
+  tabTextActive: { color: BRAND_COLORS.white },
   input: {
     borderWidth: 1,
     borderColor: '#ccc',
@@ -187,13 +188,13 @@ const styles = StyleSheet.create({
   },
   codeInput: { textAlign: 'center', letterSpacing: 6, fontSize: 20 },
   button: {
-    backgroundColor: '#1f6feb',
+    backgroundColor: BRAND_COLORS.maroon,
     borderRadius: 8,
     paddingVertical: 14,
     alignItems: 'center',
   },
   buttonDisabled: { opacity: 0.5 },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  error: { color: '#c0392b', textAlign: 'center' },
+  buttonText: { color: BRAND_COLORS.white, fontSize: 16, fontWeight: '600' },
+  error: { color: BRAND_COLORS.crimson, textAlign: 'center' },
   signOut: { color: '#888', textAlign: 'center', marginTop: 16, textDecorationLine: 'underline' },
 });

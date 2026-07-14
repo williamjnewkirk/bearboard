@@ -105,6 +105,25 @@ disclosures.
   toggleable; no all-or-nothing switch. Quiet hours 10pmâ6am team time. One
   push per trigger, no re-nags.
 
+## Brand palette (decided)
+
+Defined once in `packages/shared/src/colors.ts` (`BRAND_COLORS`) â import it,
+don't hardcode hex values. The web Tailwind config (`apps/web/tailwind.config.ts`)
+duplicates the same values under the `brand.*` theme key because
+`tailwind.config.ts` can't resolve a workspace TS import; keep the two in sync
+if a color ever changes.
+
+| Name      | Hex       | Role                                                     |
+| --------- | --------- | -------------------------------------------------------- |
+| `maroon`  | `#971B2F` | Primary â default buttons, links, brand headers          |
+| `crimson` | `#BA0C2F` | Emphasis/destructive â regenerate, remove, leave, errors |
+| `forest`  | `#13322B` | Dark neutral â brand-tinted near-black text/emphasis     |
+| `green`   | `#215732` | Secondary â positive/confirmation, secondary actions     |
+
+Plain black/white and Tailwind's default gray scale remain the neutral palette
+for body text and muted UI â only swap in a brand color where it's carrying
+brand weight (primary actions, headers, semantic emphasis), not every gray.
+
 ## Platform strategy (decided)
 
 **iOS-first.** Build and validate on iOS (EAS cloud dev client + TestFlight from

@@ -70,12 +70,12 @@ export function TeamGate() {
   if (state === 'error') {
     return (
       <Centered>
-        <div className="max-w-lg rounded-lg border border-red-300 bg-red-50 p-4 text-red-800">
+        <div className="max-w-lg rounded-lg border border-brand-crimson/30 bg-brand-crimson/5 p-4 text-brand-crimson">
           <p className="font-semibold">Something went wrong</p>
           <p className="mt-1 text-sm">{error}</p>
           <button
             onClick={() => void load()}
-            className="mt-3 rounded bg-red-700 px-3 py-1.5 text-sm font-medium text-white"
+            className="mt-3 rounded bg-brand-crimson px-3 py-1.5 text-sm font-medium text-white"
           >
             Retry
           </button>

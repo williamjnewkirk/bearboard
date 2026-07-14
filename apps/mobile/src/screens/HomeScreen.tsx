@@ -1,4 +1,5 @@
 import { useUser } from '@clerk/clerk-expo';
+import { BRAND_COLORS } from '@bearboard/shared';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSupabase } from '../lib/useSupabase';
@@ -89,14 +90,14 @@ export function HomeScreen() {
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 10 },
   errorTitle: { fontSize: 17, fontWeight: '700' },
-  errorText: { fontSize: 14, color: '#c0392b', textAlign: 'center' },
+  errorText: { fontSize: 14, color: BRAND_COLORS.crimson, textAlign: 'center' },
   retry: {
     marginTop: 8,
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: BRAND_COLORS.maroon,
     borderRadius: 8,
     paddingHorizontal: 18,
     paddingVertical: 10,
   },
-  retryText: { fontWeight: '600' },
+  retryText: { fontWeight: '600', color: BRAND_COLORS.maroon },
 });

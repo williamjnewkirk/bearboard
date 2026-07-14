@@ -60,7 +60,7 @@ export function Onboarding({ onJoined }: { onJoined: () => void }) {
   return (
     <main className="mx-auto max-w-3xl p-6">
       <header className="mb-8 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">BearBoard</h1>
+        <h1 className="text-2xl font-bold text-brand-maroon">BearBoard</h1>
         <UserButton />
       </header>
 
@@ -69,7 +69,7 @@ export function Onboarding({ onJoined }: { onJoined: () => void }) {
       </p>
 
       {error ? (
-        <div className="mb-4 rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">
+        <div className="mb-4 rounded border border-brand-crimson/30 bg-brand-crimson/5 p-3 text-sm text-brand-crimson">
           {error}
         </div>
       ) : null}
@@ -90,7 +90,7 @@ export function Onboarding({ onJoined }: { onJoined: () => void }) {
           <button
             onClick={() => void join()}
             disabled={busy !== null || code.trim().length < 6}
-            className="w-full rounded bg-blue-600 px-4 py-2 font-medium text-white disabled:opacity-50"
+            className="w-full rounded bg-brand-maroon px-4 py-2 font-medium text-white disabled:opacity-50"
           >
             {busy === 'join' ? 'Joining…' : 'Join team'}
           </button>
@@ -114,7 +114,7 @@ export function Onboarding({ onJoined }: { onJoined: () => void }) {
           <button
             onClick={() => void create()}
             disabled={busy !== null || teamName.trim().length === 0}
-            className="w-full rounded bg-gray-900 px-4 py-2 font-medium text-white disabled:opacity-50"
+            className="w-full rounded bg-brand-forest px-4 py-2 font-medium text-white disabled:opacity-50"
           >
             {busy === 'create' ? 'Creating…' : 'Create team'}
           </button>
