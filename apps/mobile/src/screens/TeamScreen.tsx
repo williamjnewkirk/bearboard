@@ -142,7 +142,12 @@ export function TeamScreen({
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingTop: 64, paddingHorizontal: 20 },
+  container: {
+    flex: 1,
+    paddingTop: 64,
+    paddingHorizontal: 20,
+    backgroundColor: BRAND_COLORS.white,
+  },
   header: { marginBottom: 16 },
   title: { fontSize: 26, fontWeight: '700', color: BRAND_COLORS.maroon },
   subtitle: { fontSize: 14, color: '#666', marginTop: 2 },

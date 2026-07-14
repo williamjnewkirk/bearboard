@@ -14,6 +14,8 @@ import {
 
 type Mode = 'signIn' | 'signUp';
 
+const PLACEHOLDER = '#8A8A8A';
+
 /**
  * Email/password sign-in and sign-up with email-code verification.
  * OAuth (Apple + native Google ID-token) is added next per the Polyscope
@@ -106,6 +108,7 @@ export function SignInScreen() {
           <TextInput
             style={styles.input}
             placeholder="Verification code"
+            placeholderTextColor={PLACEHOLDER}
             keyboardType="number-pad"
             value={code}
             onChangeText={setCode}
@@ -118,6 +121,7 @@ export function SignInScreen() {
           <TextInput
             style={styles.input}
             placeholder="Email"
+            placeholderTextColor={PLACEHOLDER}
             autoCapitalize="none"
             keyboardType="email-address"
             value={email}
@@ -126,6 +130,7 @@ export function SignInScreen() {
           <TextInput
             style={styles.input}
             placeholder="Password"
+            placeholderTextColor={PLACEHOLDER}
             secureTextEntry
             value={password}
             onChangeText={setPassword}
@@ -178,8 +183,19 @@ function errorMessage(e: unknown): string {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', padding: 24, gap: 12 },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    padding: 24,
+    gap: 12,
+    backgroundColor: BRAND_COLORS.white,
+  },
+  center: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: BRAND_COLORS.white,
+  },
   title: {
     fontSize: 32,
     fontWeight: '700',
@@ -195,6 +211,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 12,
     fontSize: 16,
+    backgroundColor: BRAND_COLORS.white,
+    color: '#111111',
   },
   button: {
     backgroundColor: BRAND_COLORS.maroon,

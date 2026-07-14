@@ -23,39 +23,50 @@ export function TeamGate() {
   const load = useCallback(async () => {
     if (!user) return;
     setState('loading');
-    const sb = await getSupabase();
+    try {
+      const sb = await getSupabase();
 
-    const { error: syncError } = await sb.rpc('sync_user', {
-      p_name: user.fullName ?? user.firstName ?? null,
-      p_photo_url: user.imageUrl ?? null,
-    });
-    if (syncError) {
+      const { error: syncError } = await sb.rpc('sync_user', {
+        p_name: user.fullName ?? user.firstName ?? null,
+        p_photo_url: user.imageUrl ?? null,
+      });
+      if (syncError) {
+        setError(
+          `Profile sync failed: ${syncError.message}. ` +
+            'Check that migrations are pushed and Clerk third-party auth is configured in Supabase.',
+        );
+        setState('error');
+        return;
+      }
+
+      const { data, error: memError } = await sb
+        .from('team_members')
+        .select('id, role, team:teams(id, name, school)')
+        .eq('user_id', user.id)
+        .eq('status', 'active');
+      if (memError) {
+        setError(`Could not load your team: ${memError.message}`);
+        setState('error');
+        return;
+      }
+
+      const rows = (data ?? []) as unknown as Membership[];
+      if (rows.length === 0) {
+        setMembership(null);
+        setState('no-team');
+      } else {
+        setMembership(rows[0] ?? null);
+        setState('member');
+      }
+    } catch (e) {
+      // Most likely: the Clerk `supabase` JWT template doesn't exist yet, so
+      // getToken throws. Surface it instead of hanging on the loader.
       setError(
-        `Profile sync failed: ${syncError.message}. ` +
-          'Check that migrations are pushed and Clerk third-party auth is configured in Supabase.',
+        `${e instanceof Error ? e.message : String(e)}. ` +
+          'If this mentions a JWT template, create a Clerk JWT template named ' +
+          '"supabase" and add Clerk under Supabase → Third-Party Auth.',
       );
       setState('error');
-      return;
-    }
-
-    const { data, error: memError } = await sb
-      .from('team_members')
-      .select('id, role, team:teams(id, name, school)')
-      .eq('user_id', user.id)
-      .eq('status', 'active');
-    if (memError) {
-      setError(`Could not load your team: ${memError.message}`);
-      setState('error');
-      return;
-    }
-
-    const rows = (data ?? []) as unknown as Membership[];
-    if (rows.length === 0) {
-      setMembership(null);
-      setState('no-team');
-    } else {
-      setMembership(rows[0] ?? null);
-      setState('member');
     }
   }, [user, getSupabase]);
 

@@ -15,6 +15,8 @@ import { useSupabase } from '../lib/useSupabase';
 
 type Mode = 'join' | 'create';
 
+const PLACEHOLDER = '#8A8A8A';
+
 /** First-run: join with a code, or create a team (become its coach). */
 export function OnboardingScreen({ onJoined }: { onJoined: () => void }) {
   const { user } = useUser();
@@ -87,6 +89,7 @@ export function OnboardingScreen({ onJoined }: { onJoined: () => void }) {
           <TextInput
             style={[styles.input, styles.codeInput]}
             placeholder="JOIN CODE"
+            placeholderTextColor={PLACEHOLDER}
             autoCapitalize="characters"
             autoCorrect={false}
             value={code}
@@ -105,12 +108,14 @@ export function OnboardingScreen({ onJoined }: { onJoined: () => void }) {
           <TextInput
             style={styles.input}
             placeholder="Team name (e.g. WashU XC)"
+            placeholderTextColor={PLACEHOLDER}
             value={teamName}
             onChangeText={setTeamName}
           />
           <TextInput
             style={styles.input}
             placeholder="School (optional)"
+            placeholderTextColor={PLACEHOLDER}
             value={school}
             onChangeText={setSchool}
           />
@@ -163,7 +168,13 @@ function PrimaryButton({
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', padding: 24, gap: 12 },
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    padding: 24,
+    gap: 12,
+    backgroundColor: BRAND_COLORS.white,
+  },
   title: { fontSize: 32, fontWeight: '700', textAlign: 'center', color: BRAND_COLORS.maroon },
   subtitle: { fontSize: 15, color: '#444', textAlign: 'center', marginBottom: 8 },
   tabs: { flexDirection: 'row', gap: 8, marginBottom: 4 },
@@ -185,6 +196,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 12,
     fontSize: 16,
+    backgroundColor: BRAND_COLORS.white,
+    color: '#111111',
   },
   codeInput: { textAlign: 'center', letterSpacing: 6, fontSize: 20 },
   button: {
