@@ -20,7 +20,8 @@
       "minSdkVersion": 29
     },
     "plugins": [
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-web-browser"
     ],
     "extra": {
       "eas": {
