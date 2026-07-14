@@ -19,8 +19,8 @@
     "ios": "npm run ios --workspace @bearboard/mobile",
     "shared:build": "npm run build --workspace @bearboard/shared",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,sql}\"",
-    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,sql}\"",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "db:diff": "supabase db diff",
     "db:push": "supabase db push",
     "db:reset": "supabase db reset"

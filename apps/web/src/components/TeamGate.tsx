@@ -1,23 +1,24 @@
-import { useUser } from '@clerk/clerk-expo';
+'use client';
+
+import { useUser, UserButton } from '@clerk/nextjs';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
-import { useSupabase } from '../lib/useSupabase';
-import type { Membership } from '../lib/team-types';
-import { OnboardingScreen } from './OnboardingScreen';
-import { TeamScreen } from './TeamScreen';
+import { useSupabase } from '@/lib/useSupabase';
+import type { Membership } from '@/lib/team-types';
+import { Onboarding } from './Onboarding';
+import { Dashboard } from './Dashboard';
 
 type GateState = 'loading' | 'error' | 'no-team' | 'member';
 
 /**
  * Post-auth gate: syncs the Clerk profile into `users`, loads the caller's
- * membership, then shows Onboarding (join/create) or the Team screen.
+ * team membership, and routes to Onboarding (no team) or the Dashboard.
  */
-export function HomeScreen() {
+export function TeamGate() {
   const { user, isLoaded } = useUser();
   const getSupabase = useSupabase();
   const [state, setState] = useState<GateState>('loading');
   const [membership, setMembership] = useState<Membership | null>(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string>('');
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -29,7 +30,10 @@ export function HomeScreen() {
       p_photo_url: user.imageUrl ?? null,
     });
     if (syncError) {
-      setError(`Profile sync failed: ${syncError.message}`);
+      setError(
+        `Profile sync failed: ${syncError.message}. ` +
+          'Check that migrations are pushed and Clerk third-party auth is configured in Supabase.',
+      );
       setState('error');
       return;
     }
@@ -60,43 +64,40 @@ export function HomeScreen() {
   }, [isLoaded, user, load]);
 
   if (!isLoaded || state === 'loading') {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator />
-      </View>
-    );
+    return <Centered>Loading…</Centered>;
   }
 
   if (state === 'error') {
     return (
-      <View style={styles.center}>
-        <Text style={styles.errorTitle}>Something went wrong</Text>
-        <Text style={styles.errorText}>{error}</Text>
-        <Pressable style={styles.retry} onPress={() => void load()}>
-          <Text style={styles.retryText}>Retry</Text>
-        </Pressable>
-      </View>
+      <Centered>
+        <div className="max-w-lg rounded-lg border border-red-300 bg-red-50 p-4 text-red-800">
+          <p className="font-semibold">Something went wrong</p>
+          <p className="mt-1 text-sm">{error}</p>
+          <button
+            onClick={() => void load()}
+            className="mt-3 rounded bg-red-700 px-3 py-1.5 text-sm font-medium text-white"
+          >
+            Retry
+          </button>
+        </div>
+      </Centered>
     );
   }
 
   if (state === 'no-team') {
-    return <OnboardingScreen onJoined={() => void load()} />;
+    return <Onboarding onJoined={() => void load()} />;
   }
 
-  return membership ? <TeamScreen membership={membership} onChanged={() => void load()} /> : null;
+  return membership ? <Dashboard membership={membership} onChanged={() => void load()} /> : null;
 }
 
-const styles = StyleSheet.create({
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 10 },
-  errorTitle: { fontSize: 17, fontWeight: '700' },
-  errorText: { fontSize: 14, color: '#c0392b', textAlign: 'center' },
-  retry: {
-    marginTop: 8,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-  },
-  retryText: { fontWeight: '600' },
-});
+function Centered({ children }: { children: React.ReactNode }) {
+  return (
+    <main className="grid min-h-screen place-items-center p-6">
+      <div className="absolute right-4 top-4">
+        <UserButton />
+      </div>
+      {children}
+    </main>
+  );
+}

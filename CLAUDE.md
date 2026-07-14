@@ -144,11 +144,14 @@ Justified because the pilot is HealthKit-primary and pilot users are on iPhones.
 
 ## Status (as of scaffold)
 
-`packages/shared` complete + typechecks. Clerk auth + the Supabase client
-pattern are wired on both surfaces (web: ClerkProvider + middleware + hosted
-`SignIn`/`SignUp`; mobile: `ClerkProvider` + SecureStore token cache +
-`SignedIn`/`SignedOut` gate with an email/password screen). All workspaces
-typecheck; not yet run end-to-end (needs Clerk/Supabase keys + a device).
-`supabase/0001_init.sql` written but not yet run against a live Postgres.
-Next up per PRD Â§7 Week 1: OAuth (Apple + native Google), Clerk user â `users`
-row sync, team create/join flows, roster + squads, first EAS dev-client build.
+Week 1 feature set is code-complete: auth on both surfaces, profile sync
+(`sync_user` RPC on app load), team create/join via codes (`create_team`,
+`join_team_with_code` RPCs; role determined by which code is used), coach
+join-code display/copy/regenerate, roster views, squad management (web:
+create/delete squads + membership checkboxes in the roster table; mobile
+squad management is a known parity gap for Week 2), remove member (web,
+coach), leave team (athlete). Migration `0002_team_onboarding.sql` holds the
+RPCs + roster-visibility policies. All workspaces typecheck. NOT yet verified
+end-to-end against live Supabase/Clerk â needs migrations pushed + third-party
+auth configured. Remaining Week 1 items: first EAS iOS dev-client build
+(needs Apple Developer membership), OAuth (Apple + native Google).
