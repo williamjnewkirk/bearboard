@@ -70,9 +70,13 @@ export function TeamGate() {
     }
   }, [user, getSupabase]);
 
+  // Run once when the signed-in user becomes available. Intentionally NOT
+  // depending on `load`/`getSupabase` identity (Clerk's getToken can change per
+  // render), which would re-fire the effect every render and thrash the UI.
   useEffect(() => {
     if (isLoaded && user) void load();
-  }, [isLoaded, user, load]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoaded, user?.id]);
 
   if (!isLoaded || state === 'loading') {
     return <Centered>Loading…</Centered>;

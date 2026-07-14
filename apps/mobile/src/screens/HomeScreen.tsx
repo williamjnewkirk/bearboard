@@ -82,9 +82,14 @@ export function HomeScreen() {
     }
   }, [user, getSupabase]);
 
+  // Run once when the signed-in user becomes available. Intentionally NOT
+  // depending on `load`/`getSupabase` identity: those can change per render
+  // (Clerk's getToken), which would re-fire the effect every render and thrash
+  // the UI. user?.id is the only input that should re-trigger a fresh load.
   useEffect(() => {
     if (isLoaded && user) void load();
-  }, [isLoaded, user, load]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoaded, user?.id]);
 
   if (!isLoaded || state === 'loading') {
     return (
