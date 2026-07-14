@@ -1,4 +1,4 @@
--- Bearboard schema v1 (PRD Â§6.2).
+-- BearBoard schema v1 (PRD Â§6.2).
 --
 -- Auth model: Clerk is the identity provider, integrated with Supabase via a
 -- JWT template named "supabase". The Clerk user id (a TEXT value like

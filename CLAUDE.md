@@ -5,7 +5,7 @@ Guidance for Claude Code working in this repo. Read alongside `bearboard-prd.md`
 
 ## What this is
 
-Bearboard â a team training dashboard for collegiate XC/TF. npm-workspaces
+BearBoard â a team training dashboard for collegiate XC/TF. npm-workspaces
 monorepo: `apps/web` (Next.js coach console), `apps/mobile` (Expo app),
 `packages/shared` (TS types), `supabase/` (Postgres schema + RLS).
 
@@ -34,7 +34,7 @@ list in Â§7, never cutting the plan grid, sync, feed, or messaging.
 
 ## Conventions carried from Polyscope (the shipped predecessor app)
 
-Bearboard reuses the exact stack and process proven on Polyscope. Follow these
+BearBoard reuses the exact stack and process proven on Polyscope. Follow these
 as defaults unless told otherwise.
 
 **Stack baseline (proven versions):** Expo SDK 54 (`expo ~54`), React Native
@@ -42,7 +42,7 @@ as defaults unless told otherwise.
 (https://docs.expo.dev/versions/v54.0.0/) before writing Expo-specific code.
 Monitoring: Sentry (`@sentry/react-native`) + PostHog (`posthog-react-native`).
 Animations if needed: Reanimated ~4.1 + react-native-worklets + Gesture Handler
-v2. (Bearboard adds HealthKit / Health Connect, which Polyscope did not have.)
+v2. (BearBoard adds HealthKit / Health Connect, which Polyscope did not have.)
 
 **Clerk auth gotchas (learned the hard way):**
 
@@ -105,6 +105,24 @@ disclosures.
   toggleable; no all-or-nothing switch. Quiet hours 10pmâ6am team time. One
   push per trigger, no re-nags.
 
+## Platform strategy (decided)
+
+**iOS-first.** Build and validate on iOS (EAS cloud dev client + TestFlight from
+Windows); Android is a later verification pass, mirroring the Polyscope process.
+Justified because the pilot is HealthKit-primary and pilot users are on iPhones.
+
+- Most of the app (planning grid, messaging, feed, RLS, results, debriefs) is
+  cross-platform and carries to Android with minor polish.
+- The real Android work is **activity sync**: Health Connect differs from
+  HealthKit and Android background sync is restrictive (foreground-on-open is an
+  accepted fallback; it's cut-list item #5 in the PRD). Play health-data review
+  is also stricter/slower than Apple's â budget for it, don't discover it late.
+- **Mitigation, do it now:** build sync behind a platform-agnostic interface
+  (e.g. a `SyncProvider`), implement the HealthKit adapter first, and add the
+  Health Connect adapter later as an additive change â not a rearchitecture.
+- If any pilot athletes are on Android, the Android pass must land **before**
+  roster onboarding at the first practice, not after.
+
 ## Working here
 
 - **Package manager:** npm workspaces. Run installs from the repo root.
@@ -117,11 +135,20 @@ disclosures.
 - **Before committing nontrivial changes:** `npm run typecheck` and, for schema
   changes, apply against a local DB (`supabase db reset`) to catch SQL errors â
   CI here can't (no Docker in some envs).
+- **Single `@types/react`.** RN + React 19 break with "X cannot be used as a JSX
+  component" if `@types/react` is duplicated across workspaces. It's pinned via
+  root `overrides`; if the error returns after an install, run `npm dedupe`.
+- **Auth pattern in code:** get a client with `useSupabase()` (web + mobile) or
+  `getServerSupabase()` (web server) â each returns a fresh token-carrying
+  client; never store it. Always check `{ data, error }`.
 
 ## Status (as of scaffold)
 
-`packages/shared` complete + typechecks. Dependencies installed. `apps/web` and
-`apps/mobile` are placeholder entry points (no real screens yet); `eas init` has
-run (projectId + updates URL in `app.json`). `supabase/0001_init.sql` written but
-not yet run against a live Postgres. Next up per PRD Â§7 Week 1: Clerk+Supabase
-wiring, team create/join flows, roster + squads, first EAS dev-client build.
+`packages/shared` complete + typechecks. Clerk auth + the Supabase client
+pattern are wired on both surfaces (web: ClerkProvider + middleware + hosted
+`SignIn`/`SignUp`; mobile: `ClerkProvider` + SecureStore token cache +
+`SignedIn`/`SignedOut` gate with an email/password screen). All workspaces
+typecheck; not yet run end-to-end (needs Clerk/Supabase keys + a device).
+`supabase/0001_init.sql` written but not yet run against a live Postgres.
+Next up per PRD Â§7 Week 1: OAuth (Apple + native Google), Clerk user â `users`
+row sync, team create/join flows, roster + squads, first EAS dev-client build.

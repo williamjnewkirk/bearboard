@@ -1,9 +1,9 @@
-# Bearboard
+# BearBoard
 
 Team training dashboard for collegiate cross country / track & field.
 _Newkirk Technologies LLC Â· pilot MVP targeting the WashU XC/TF program, Fall 2026._
 
-Bearboard puts the training plan, actual training, injury status, schedules, and
+BearBoard puts the training plan, actual training, injury status, schedules, and
 team communication in one place. Its wedge over Strava: it knows what was
 _assigned_, so it can show planned vs. actual at both the week level (mileage
 goal vs. tally) and the rep level (assigned 5Ã1k vs. submitted splits).

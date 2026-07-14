@@ -2,7 +2,7 @@
   "name": "@bearboard/web",
   "version": "0.0.0",
   "private": true,
-  "description": "Bearboard coach command center (Next.js).",
+  "description": "BearBoard coach command center (Next.js).",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -12,6 +12,8 @@
   },
   "dependencies": {
     "@bearboard/shared": "*",
+    "@clerk/nextjs": "^7.5.17",
+    "@supabase/supabase-js": "^2.110.3",
     "next": "^15.1.6",
     "react": "19.1.0",
     "react-dom": "19.1.0"

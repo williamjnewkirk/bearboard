@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Bearboard",
+    "name": "BearBoard",
     "slug": "bearboard",
     "scheme": "bearboard",
     "version": "0.1.0",
@@ -19,7 +19,9 @@
       "package": "com.newkirktech.bearboard",
       "minSdkVersion": 29
     },
-    "plugins": [],
+    "plugins": [
+      "expo-secure-store"
+    ],
     "extra": {
       "eas": {
         "projectId": "7373ad84-4622-431e-8e6c-3a3078c7d9db"

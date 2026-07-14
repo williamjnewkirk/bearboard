@@ -2,7 +2,7 @@
   "name": "@bearboard/shared",
   "version": "0.0.0",
   "private": true,
-  "description": "Shared TypeScript types and constants for Bearboard (mirrors the Supabase schema).",
+  "description": "Shared TypeScript types and constants for BearBoard (mirrors the Supabase schema).",
   "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",

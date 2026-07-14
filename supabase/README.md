@@ -1,6 +1,6 @@
 # Supabase
 
-Postgres schema, RLS, Realtime, and Storage for Bearboard. Migrations are the
+Postgres schema, RLS, Realtime, and Storage for BearBoard. Migrations are the
 source of truth for the database; `packages/shared` mirrors them in TypeScript.
 
 ## Layout
