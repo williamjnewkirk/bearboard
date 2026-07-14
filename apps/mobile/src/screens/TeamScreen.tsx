@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { useSupabase } from '../lib/useSupabase';
 import type { JoinCodeRow, Membership, RosterRow } from '../lib/team-types';
+import { SquadManager } from './SquadManager';
 
 /** Team home: roster, coach join codes, sign out / leave team. */
 export function TeamScreen({
@@ -110,11 +111,16 @@ export function TeamScreen({
         </View>
       ) : null}
 
-      <Text style={styles.sectionTitle}>Roster ({roster.length})</Text>
       <FlatList
         data={roster}
         keyExtractor={(r) => r.id}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void refresh()} />}
+        ListHeaderComponent={
+          <>
+            {isCoach ? <SquadManager teamId={teamId} roster={roster} /> : null}
+            <Text style={styles.sectionTitle}>Roster ({roster.length})</Text>
+          </>
+        }
         renderItem={({ item }) => (
           <View style={styles.rosterRow}>
             <Text style={styles.rosterName}>{item.user.name}</Text>

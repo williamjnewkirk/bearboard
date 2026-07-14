@@ -168,6 +168,16 @@ Justified because the pilot is HealthKit-primary and pilot users are on iPhones.
 
 ## Status (as of scaffold)
 
+Week 2 planning core is code-complete (migration `0003_planning.sql` + web
+`PlanGrid` + mobile `ThisWeekScreen`): two-layer model (week skeleton publish
+
+- per-day detail draft/publish), per-athlete overrides, mileage goals, seen
+  receipts/confirm. Smaller items done: profile fields (class year/events via
+  `update_profile`) and mobile squad management (`SquadManager`). Web coach
+  Dashboard has Plan/Roster tabs; mobile has This Week / Team / Profile tabs.
+  Known gaps: mobile coach-side plan editing (web-only for now), structured
+  rep-scheme editor (description_rich only), meets. Not yet run against live DB.
+
 Week 1 feature set is code-complete: auth on both surfaces, profile sync
 (`sync_user` RPC on app load), team create/join via codes (`create_team`,
 `join_team_with_code` RPCs; role determined by which code is used), coach

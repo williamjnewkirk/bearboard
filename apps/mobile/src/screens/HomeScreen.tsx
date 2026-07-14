@@ -5,7 +5,7 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-nati
 import { useSupabase } from '../lib/useSupabase';
 import type { Membership } from '../lib/team-types';
 import { OnboardingScreen } from './OnboardingScreen';
-import { TeamScreen } from './TeamScreen';
+import { MemberTabs } from './MemberTabs';
 
 type GateState = 'loading' | 'error' | 'no-team' | 'member';
 
@@ -122,7 +122,7 @@ export function HomeScreen() {
     return <OnboardingScreen onJoined={() => void load()} />;
   }
 
-  return membership ? <TeamScreen membership={membership} onChanged={() => void load()} /> : null;
+  return membership ? <MemberTabs membership={membership} onChanged={() => void load()} /> : null;
 }
 
 const styles = StyleSheet.create({

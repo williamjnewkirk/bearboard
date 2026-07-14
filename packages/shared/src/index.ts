@@ -8,4 +8,5 @@
 export * from './colors';
 export * from './enums';
 export * from './json';
+export * from './plan';
 export * from './rows';
