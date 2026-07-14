@@ -15,6 +15,7 @@
   "scripts": {
     "web": "npm run dev --workspace @bearboard/web",
     "mobile": "npm run start --workspace @bearboard/mobile",
+    "mobile:go": "npm run go --workspace @bearboard/mobile",
     "android": "npm run android --workspace @bearboard/mobile",
     "ios": "npm run ios --workspace @bearboard/mobile",
     "shared:build": "npm run build --workspace @bearboard/shared",

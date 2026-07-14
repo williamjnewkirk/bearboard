@@ -150,7 +150,12 @@ Justified because the pilot is HealthKit-primary and pilot users are on iPhones.
 - **DB changes:** `supabase db diff -f <name>` to generate a migration; never
   edit an applied migration. Local stack needs Docker (`supabase start`).
 - **Mobile health data needs a dev-client build** (`expo run:ios|android`), not
-  Expo Go.
+  Expo Go. Until HealthKit/Health Connect land, run in **Expo Go**
+  (`npm run mobile:go` / `expo start --go`) â it bundles all Expo SDK native
+  modules (WebBrowser, SecureStore, AuthSession) so Clerk works. Plain
+  `expo start` defaults to dev-client mode because `expo-dev-client` is
+  installed, and there's no dev client built yet â that throws "Cannot find
+  native module" at runtime. Use `--go` for now.
 - **Before committing nontrivial changes:** `npm run typecheck` and, for schema
   changes, apply against a local DB (`supabase db reset`) to catch SQL errors â
   CI here can't (no Docker in some envs).
