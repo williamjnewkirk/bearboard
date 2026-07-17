@@ -3,6 +3,7 @@ import { BRAND_COLORS } from '@bearboard/shared';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSupabase } from '../lib/useSupabase';
+import { registerForPush } from '../lib/push';
 import type { Membership } from '../lib/team-types';
 import { OnboardingScreen } from './OnboardingScreen';
 import { MemberTabs } from './MemberTabs';
@@ -56,7 +57,9 @@ export function HomeScreen() {
 
           const { data, error: memError } = await sb
             .from('team_members')
-            .select('id, role, team:teams(id, name, school)')
+            .select(
+              'id, role, team:teams(id, name, school, timezone, feed_visible_to_athletes, split_nudge_enabled)',
+            )
             .eq('user_id', user.id)
             .eq('status', 'active');
           if (memError) throw new Error(`Could not load your team: ${memError.message}`);
@@ -68,6 +71,8 @@ export function HomeScreen() {
           } else {
             setMembership(rows[0] ?? null);
             setState('member');
+            // Register for push (no-op in Expo Go; needs a dev/store build).
+            void registerForPush(sb, user.id);
           }
         })(),
         12000,

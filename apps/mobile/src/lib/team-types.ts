@@ -4,6 +4,9 @@ export interface TeamInfo {
   id: string;
   name: string;
   school: string | null;
+  timezone: string;
+  feed_visible_to_athletes: boolean;
+  split_nudge_enabled: boolean;
 }
 
 export interface Membership {

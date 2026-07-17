@@ -49,9 +49,49 @@ security-critical surfaces:
   `feed_activities` view, which omits `private_note` and respects the team feed
   toggle.
 
-Policies for the remaining feature tables (planning, messaging, announcements,
-events, results) are added in later migrations as those features land.
+`0003_planning.sql` adds the planning read policies + write RPCs.
+`0004_full_features.sql` completes the pilot surface: policies + RPCs for
+meets/entries/results/debriefs, workout results, likes, messaging (DM/group/
+team chat with auto-membership), announcements + reactions, events + targets,
+push tokens, user settings columns, storage bucket + per-team path policies,
+the notification queue, and account deletion.
 
-> The migration has not been executed against a live Postgres in this
-> environment (no Docker). Run `supabase db reset` locally to validate before
-> relying on it.
+## Push notifications (edge function `push`)
+
+Triggers in `0004` enqueue rows into `notification_queue` (deduped — one push
+per trigger event, ever). The `push` edge function drains the queue:
+
+1. publishes due scheduled workout details (`release_due_details`)
+2. enqueues time-derived pushes (event reminders per athlete lead, race-day-
+   tomorrow, the single evening debrief prompt, the optional split nudge)
+3. claims due rows — **quiet hours (10pm–6am team time) and per-category user
+   prefs are enforced in SQL** — and POSTs to the Expo Push API.
+
+Deploy + schedule (one-time):
+
+```bash
+supabase functions deploy push --no-verify-jwt
+```
+
+Then schedule it every minute. Easiest path: Supabase Dashboard → Integrations →
+Cron (enables pg_cron + pg_net), and add a job that calls the function with the
+**service role key** as the bearer token:
+
+```sql
+select cron.schedule(
+  'bearboard-push', '* * * * *',
+  $$ select net.http_post(
+       url := 'https://<PROJECT_REF>.supabase.co/functions/v1/push',
+       headers := jsonb_build_object('Authorization', 'Bearer <SERVICE_ROLE_KEY>')
+     ) $$
+);
+```
+
+The function rejects any caller that doesn't present the service role key.
+Until the schedule exists, scheduled detail releases still work — both apps
+call `release_due_details()` opportunistically on load — but pushes queue up
+unsent.
+
+> Migrations have not been executed against a live Postgres in this
+> environment (no Docker). Run `supabase db reset` locally (or `db push` to a
+> throwaway project) to validate before relying on them.

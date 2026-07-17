@@ -4,6 +4,9 @@ export interface TeamInfo {
   id: string;
   name: string;
   school: string | null;
+  timezone: string;
+  feed_visible_to_athletes: boolean;
+  split_nudge_enabled: boolean;
 }
 
 export interface Membership {
@@ -20,6 +23,9 @@ export interface RosterRow {
     name: string;
     photo_url: string | null;
     class_year: string | null;
+    /** Present only when the query selects them. */
+    events?: string | null;
+    title?: string | null;
   };
 }
 

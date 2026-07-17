@@ -1,102 +1,158 @@
+/**
+ * Athlete "This Week" (PRD §5.2.5): all seven days — skeleton always, the full
+ * personalized prescription once each day's detail is released. Seen receipts
+ * fire at both layers; "Got it 👍" confirms.
+ */
 import {
   BRAND_COLORS,
+  DAY_TYPE_COLORS,
   DAY_TYPE_LABELS,
   WEEKDAY_LABELS,
+  addDays,
+  describeScheme,
+  formatDateTime,
   mondayOf,
+  todayISO,
   weekDates,
-  type DayType,
+  type Split,
 } from '@bearboard/shared';
 import { useCallback, useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { useSupabase } from '../lib/useSupabase';
 import type { Membership } from '../lib/team-types';
+import { effective, loadDays, type DayRow } from '../lib/plan-data';
+import { Button, Card, Chip, EmptyState, ErrorText, GRAY, Loading, LoadingScreen, Screen } from '../lib/ui';
+import { ResultsForm } from './ResultsForm';
 
-interface DayRow {
-  id: string;
-  date: string;
-  day_type: DayType;
-  skeleton_label: string | null;
-  detail: { description_rich: string | null; release_state: string } | null;
-  assignment: {
-    id: string;
-    overrides: { day_type?: DayType } | null;
-    note: string | null;
-    confirmed_at: string | null;
-  } | null;
-}
-
-/** Athlete "This Week": the 7-day skeleton + released detail, with overrides. */
 export function ThisWeekScreen({ membership }: { membership: Membership }) {
   const getSupabase = useSupabase();
-  const weekStart = mondayOf(new Date());
-  const dates = weekDates(weekStart);
-  const [rows, setRows] = useState<DayRow[]>([]);
+  const [weekStart, setWeekStart] = useState(() => mondayOf(new Date()));
+  const [days, setDays] = useState<Record<string, DayRow>>({});
+  const [goal, setGoal] = useState<{
+    low: number | null;
+    high: number | null;
+    qualifier: string | null;
+  } | null>(null);
+  const [results, setResults] = useState<
+    Record<string, { splits: Split[] | null; rpe: number | null; comment: string | null }>
+  >({});
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
+  const [logFor, setLogFor] = useState<DayRow | null>(null);
+
+  const dates = weekDates(weekStart);
 
   const load = useCallback(async () => {
     setError('');
     const sb = await getSupabase();
-    const { data, error } = await sb
-      .from('training_days')
-      .select(
-        'id, date, day_type, skeleton_label, ' +
-          'workout_details(description_rich, release_state), ' +
-          'day_assignments(id, overrides, note, confirmed_at)',
-      )
-      .eq('team_id', membership.team.id)
-      .in('date', dates);
-    if (error) {
-      setError(error.message);
+    void sb.rpc('release_due_details');
+
+    // Make sure I have assignment rows for this published week (covers joining
+    // after the coach published) so seen/confirm receipts have a home.
+    await sb.rpc('ensure_my_assignments', {
+      p_team_id: membership.team.id,
+      p_week_start: weekStart,
+    });
+
+    const { days: dayMap, error: dErr } = await loadDays(
+      sb,
+      membership.team.id,
+      dates,
+      membership.id,
+    );
+    if (dErr) {
+      setError(dErr);
       setLoading(false);
       return;
     }
+    setDays(dayMap);
 
-    const byDate: Record<string, DayRow> = {};
-    for (const d of (data ?? []) as unknown as Array<{
-      id: string;
-      date: string;
-      day_type: DayType;
-      skeleton_label: string | null;
-      workout_details: Array<{ description_rich: string | null; release_state: string }>;
-      day_assignments: Array<DayRow['assignment']>;
-    }>) {
-      byDate[d.date] = {
-        id: d.id,
-        date: d.date,
-        day_type: d.day_type,
-        skeleton_label: d.skeleton_label,
-        detail: d.workout_details?.[0] ?? null,
-        assignment: d.day_assignments?.[0] ?? null,
-      };
+    // Seen receipts (fire-and-forget): skeleton for every visible day, detail
+    // for days whose released prescription is on screen.
+    for (const d of Object.values(dayMap)) {
+      if (d.assignment) {
+        void sb.rpc('mark_skeleton_seen', { p_assignment_id: d.assignment.id });
+        if (d.detail?.release_state === 'published') {
+          void sb.rpc('mark_detail_seen', { p_assignment_id: d.assignment.id });
+        }
+      }
     }
-    setRows(dates.map((date, i) => byDate[date] ?? emptyDay(date, i)));
 
-    // Mark skeletons seen (fire-and-forget).
-    for (const d of Object.values(byDate)) {
-      if (d.assignment) void sb.rpc('mark_skeleton_seen', { p_assignment_id: d.assignment.id });
+    // Mileage goal for the week.
+    const { data: weekRow } = await sb
+      .from('weeks')
+      .select('id')
+      .eq('team_id', membership.team.id)
+      .eq('start_date', weekStart)
+      .maybeSingle();
+    if ((weekRow as { id?: string } | null)?.id) {
+      const { data: g } = await sb
+        .from('mileage_goals')
+        .select('goal_low, goal_high, qualifier')
+        .eq('week_id', (weekRow as { id: string }).id)
+        .eq('team_member_id', membership.id)
+        .maybeSingle();
+      setGoal(
+        g
+          ? {
+              low: (g as { goal_low: number | null }).goal_low,
+              high: (g as { goal_high: number | null }).goal_high,
+              qualifier: (g as { qualifier: string | null }).qualifier,
+            }
+          : null,
+      );
+    } else {
+      setGoal(null);
+    }
+
+    // My submitted results for these assignments.
+    const asgIds = Object.values(dayMap)
+      .map((d) => d.assignment?.id)
+      .filter((x): x is string => Boolean(x));
+    if (asgIds.length) {
+      const { data: res } = await sb
+        .from('workout_results')
+        .select('assignment_id, splits, rpe, comment')
+        .in('assignment_id', asgIds);
+      const rMap: typeof results = {};
+      for (const r of (res ?? []) as unknown as Array<{
+        assignment_id: string;
+        splits: Split[] | null;
+        rpe: number | null;
+        comment: string | null;
+      }>) {
+        rMap[r.assignment_id] = r;
+      }
+      setResults(rMap);
     }
     setLoading(false);
-  }, [getSupabase, membership.team.id, dates]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [getSupabase, membership.team.id, membership.id, weekStart]);
 
   useEffect(() => {
     void load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [membership.team.id]);
+  }, [load]);
 
   async function confirm(assignmentId: string) {
+    // Optimistic: flip the card to "Got it" instantly, reconcile on error.
+    const nowIso = new Date().toISOString();
+    setDays((prev) => {
+      const next: Record<string, DayRow> = {};
+      for (const [date, d] of Object.entries(prev)) {
+        next[date] =
+          d.assignment?.id === assignmentId
+            ? {
+                ...d,
+                assignment: { ...d.assignment, confirmed_at: nowIso, detail_seen_at: nowIso },
+              }
+            : d;
+      }
+      return next;
+    });
     const sb = await getSupabase();
-    await sb.rpc('confirm_assignment', { p_assignment_id: assignmentId });
-    await load();
+    const { error } = await sb.rpc('confirm_assignment', { p_assignment_id: assignmentId });
+    if (error) await load();
   }
 
   async function refresh() {
@@ -105,118 +161,160 @@ export function ThisWeekScreen({ membership }: { membership: Membership }) {
     setRefreshing(false);
   }
 
-  if (loading) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator color={BRAND_COLORS.maroon} />
-      </View>
-    );
-  }
+  if (loading) return <LoadingScreen title="This Week" variant="days" />;
+
+  const anyVisible = dates.some((d) => days[d]?.assignment);
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={{ paddingBottom: 40 }}
+    <Screen
+      title="This Week"
+      subtitle={`Week of ${weekStart}${goal ? ` · goal ${goal.low ?? ''}–${goal.high ?? ''} mi${goal.qualifier ? ` (${goal.qualifier})` : ''}` : ''}`}
+      right={
+        <View style={{ flexDirection: 'row', gap: 6 }}>
+          <Button
+            small
+            variant="ghost"
+            label="‹"
+            onPress={() => setWeekStart(addDays(weekStart, -7))}
+          />
+          <Button
+            small
+            variant="ghost"
+            label="›"
+            onPress={() => setWeekStart(addDays(weekStart, 7))}
+          />
+        </View>
+      }
+      scroll
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void refresh()} />}
     >
-      <Text style={styles.h1}>This Week</Text>
-      <Text style={styles.sub}>Week of {weekStart}</Text>
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      <ErrorText>{error}</ErrorText>
 
-      {rows.map((d, i) => {
-        const type = d.assignment?.overrides?.day_type ?? d.day_type;
+      {!anyVisible ? (
+        <EmptyState
+          icon="calendar-outline"
+          title="This week isn’t published yet"
+          hint="You’ll get a push the moment your coach posts the week. Pull to refresh."
+        />
+      ) : null}
+
+      {dates.map((date, i) => {
+        const d = days[date];
+        const isToday = date === todayISO();
+        if (!d || !d.assignment) {
+          return (
+            <Card key={date} style={isToday ? st.todayCard : undefined}>
+              <View style={st.cardHeader}>
+                <Text style={st.weekday}>
+                  {WEEKDAY_LABELS[i]} · {date.slice(5)}
+                </Text>
+                <Text style={st.mutedSmall}>{d ? 'Not published' : '—'}</Text>
+              </View>
+            </Card>
+          );
+        }
+        const eff = effective(d);
         const published = d.detail?.release_state === 'published';
-        const isToday = d.date === todayISO();
+        const scheduled = d.detail?.release_state === 'scheduled';
+        const edited =
+          published &&
+          d.detail?.updated_at &&
+          d.detail?.published_at &&
+          d.detail.updated_at > d.detail.published_at;
+        const result = results[d.assignment.id];
         return (
-          <View key={d.date} style={[styles.card, isToday && styles.cardToday]}>
-            <View style={styles.cardHeader}>
-              <Text style={styles.weekday}>
-                {WEEKDAY_LABELS[i]} · {d.date.slice(5)}
+          <Card
+            key={date}
+            style={isToday ? st.todayCard : undefined}
+            accent={DAY_TYPE_COLORS[eff.dayType]}
+          >
+            <View style={st.cardHeader}>
+              <Text style={[st.weekday, isToday && { color: BRAND_COLORS.maroon }]}>
+                {isToday ? 'TODAY' : WEEKDAY_LABELS[i]} · {date.slice(5)}
               </Text>
-              <Text style={styles.dayType}>{DAY_TYPE_LABELS[type]}</Text>
-            </View>
-            {d.skeleton_label ? <Text style={styles.label}>{d.skeleton_label}</Text> : null}
-
-            {!d.assignment ? (
-              <Text style={styles.muted}>Not published yet.</Text>
-            ) : published && d.detail?.description_rich ? (
-              <>
-                <Text style={styles.detail}>{d.detail.description_rich}</Text>
-                {d.assignment.note ? (
-                  <Text style={styles.note}>Note: {d.assignment.note}</Text>
+              <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
+                {d.assignment.overrides?.day_type ? (
+                  <Chip color={BRAND_COLORS.maroon} label="custom" />
                 ) : null}
-                {d.assignment.confirmed_at ? (
-                  <Text style={styles.confirmed}>✓ Got it</Text>
-                ) : (
-                  <Pressable style={styles.gotIt} onPress={() => void confirm(d.assignment!.id)}>
-                    <Text style={styles.gotItText}>Got it 👍</Text>
-                  </Pressable>
-                )}
-              </>
-            ) : (
-              <Text style={styles.muted}>
-                Details coming{d.assignment.note ? ` · ${d.assignment.note}` : ''}
+                {edited ? <Chip color="#B45309" label="updated" /> : null}
+                <Text style={[st.dayType, { color: DAY_TYPE_COLORS[eff.dayType] }]}>
+                  {eff.typeName}
+                </Text>
+              </View>
+            </View>
+            {eff.label ? <Text style={st.label}>{eff.label}</Text> : null}
+
+            {eff.description ? (
+              <Text style={st.detail}>{eff.description}</Text>
+            ) : published ? null : (
+              <Text style={st.muted}>
+                Details coming
+                {scheduled && d.detail?.release_at
+                  ? ` · expected ${formatDateTime(d.detail.release_at)}`
+                  : ''}
               </Text>
             )}
-          </View>
+            {eff.scheme?.length ? (
+              <Text style={st.scheme}>{describeScheme(eff.scheme)}</Text>
+            ) : null}
+            {d.assignment.note ? <Text style={st.note}>Coach: {d.assignment.note}</Text> : null}
+
+            {published ? (
+              <View style={st.actions}>
+                {d.assignment.confirmed_at ? (
+                  <Text style={st.confirmed}>✓ Got it</Text>
+                ) : (
+                  <Button
+                    small
+                    variant="secondary"
+                    label="Got it 👍"
+                    onPress={() => void confirm(d.assignment!.id)}
+                  />
+                )}
+                <Pressable onPress={() => setLogFor(d)}>
+                  <Text style={st.logLink}>{result ? 'Edit splits ✓' : 'Log splits'}</Text>
+                </Pressable>
+              </View>
+            ) : null}
+          </Card>
         );
       })}
-    </ScrollView>
+
+      {logFor?.assignment ? (
+        <ResultsForm
+          visible={Boolean(logFor)}
+          assignmentId={logFor.assignment.id}
+          scheme={effective(logFor).scheme ?? []}
+          existing={results[logFor.assignment.id] ?? null}
+          workoutLabel={effective(logFor).label ?? effective(logFor).typeName}
+          onClose={() => setLogFor(null)}
+          onSubmitted={() => {
+            setLogFor(null);
+            void load();
+          }}
+        />
+      ) : null}
+    </Screen>
   );
 }
 
-function emptyDay(date: string, _i: number): DayRow {
-  return {
-    id: `empty-${date}`,
-    date,
-    day_type: 'rest',
-    skeleton_label: null,
-    detail: null,
-    assignment: null,
-  };
-}
-
-function todayISO(): string {
-  const d = new Date();
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  return `${d.getFullYear()}-${mm}-${dd}`;
-}
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: BRAND_COLORS.white, paddingHorizontal: 16 },
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: BRAND_COLORS.white,
-  },
-  h1: { fontSize: 24, fontWeight: '700', color: BRAND_COLORS.maroon, marginTop: 8 },
-  sub: { fontSize: 13, color: '#666', marginBottom: 8 },
-  error: { color: BRAND_COLORS.crimson, marginBottom: 8 },
-  card: {
-    borderWidth: 1,
-    borderColor: '#e4e4e4',
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 10,
-  },
-  cardToday: { borderColor: BRAND_COLORS.maroon, borderWidth: 2 },
+const st = StyleSheet.create({
+  todayCard: { borderColor: BRAND_COLORS.maroon, borderWidth: 2 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  weekday: { fontSize: 13, color: '#888', fontWeight: '600' },
-  dayType: { fontSize: 16, fontWeight: '700', color: BRAND_COLORS.forest },
-  label: { fontSize: 14, color: '#444', marginTop: 2 },
-  detail: { fontSize: 14, color: '#111', marginTop: 8, lineHeight: 20 },
+  weekday: { fontSize: 12, color: GRAY[500], fontWeight: '800', letterSpacing: 0.4 },
+  dayType: { fontSize: 16, fontWeight: '800' },
+  label: { fontSize: 14, color: GRAY[700], marginTop: 3 },
+  detail: { fontSize: 14, color: GRAY[900], marginTop: 8, lineHeight: 20 },
+  scheme: { fontSize: 13, color: BRAND_COLORS.green, marginTop: 6, fontWeight: '600' },
   note: { fontSize: 13, color: BRAND_COLORS.maroon, marginTop: 6 },
-  muted: { fontSize: 13, color: '#999', marginTop: 8, fontStyle: 'italic' },
-  gotIt: {
-    alignSelf: 'flex-start',
-    marginTop: 10,
-    backgroundColor: BRAND_COLORS.green,
-    borderRadius: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+  muted: { fontSize: 13, color: GRAY[400], fontStyle: 'italic', marginTop: 6 },
+  mutedSmall: { fontSize: 12, color: GRAY[400], fontStyle: 'italic' },
+  actions: { flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 10 },
+  confirmed: { color: BRAND_COLORS.green, fontWeight: '700', fontSize: 13 },
+  logLink: {
+    color: BRAND_COLORS.maroon,
+    fontWeight: '600',
+    fontSize: 13,
+    textDecorationLine: 'underline',
   },
-  gotItText: { color: BRAND_COLORS.white, fontWeight: '600' },
-  confirmed: { marginTop: 10, color: BRAND_COLORS.green, fontWeight: '600' },
 });

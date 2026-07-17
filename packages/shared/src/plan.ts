@@ -19,6 +19,18 @@ export const DAY_TYPE_LABELS: Record<DayType, string> = {
   other: 'Other',
 };
 
+/**
+ * Display name for a day: the coach's custom label when the type is "other"
+ * and a name was given, otherwise the standard enum label. Use everywhere a
+ * day type is shown so custom day types read as first-class.
+ */
+export function dayTypeName(dayType: DayType, customTypeLabel?: string | null): string {
+  if (dayType === 'other' && customTypeLabel && customTypeLabel.trim()) {
+    return customTypeLabel.trim();
+  }
+  return DAY_TYPE_LABELS[dayType];
+}
+
 /** A day's detail as the coach sees it (any release state). */
 export interface DetailView {
   id: string;
@@ -34,6 +46,8 @@ export interface PlanDay {
   date: string; // YYYY-MM-DD
   day_type: DayType;
   skeleton_label: string | null;
+  /** Coach's custom name when day_type is 'other' (else null). */
+  custom_type_label?: string | null;
   detail: DetailView | null;
 }
 

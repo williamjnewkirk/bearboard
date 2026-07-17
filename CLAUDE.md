@@ -166,17 +166,35 @@ Justified because the pilot is HealthKit-primary and pilot users are on iPhones.
   `getServerSupabase()` (web server) â each returns a fresh token-carrying
   client; never store it. Always check `{ data, error }`.
 
-## Status (as of scaffold)
+## Status (full PRD feature set code-complete)
 
-Week 2 planning core is code-complete (migration `0003_planning.sql` + web
-`PlanGrid` + mobile `ThisWeekScreen`): two-layer model (week skeleton publish
+The entire pilot feature set is implemented (migrations `0001`–`0004`, web
+console, mobile app). See `TESTING.md` for setup + a per-feature test script.
 
-- per-day detail draft/publish), per-athlete overrides, mileage goals, seen
-  receipts/confirm. Smaller items done: profile fields (class year/events via
-  `update_profile`) and mobile squad management (`SquadManager`). Web coach
-  Dashboard has Plan/Roster tabs; mobile has This Week / Team / Profile tabs.
-  Known gaps: mobile coach-side plan editing (web-only for now), structured
-  rep-scheme editor (description_rich only), meets. Not yet run against live DB.
+- **DB (`0004_full_features.sql`)**: all remaining RLS policies + RPCs — meets/
+  entries/results/debriefs, workout results, activities import (dedup + review
+  mode), likes, messaging (team-chat auto-membership triggers), announcements +
+  reactions, events + targets, injury RPC, user settings columns, storage
+  bucket + per-team policies, `notification_queue` + enqueue triggers,
+  scheduled detail release, `delete_account`. Views: `weekly_mileage`,
+  `shoe_mileage`, `current_injury`.
+- **Push**: `supabase/functions/push` drains the queue (quiet hours + per-
+  category prefs enforced in SQL); deploy + schedule per `supabase/README.md`.
+- **Web console**: sidebar shell + Dashboard (compliance), Plan grid (templates,
+  scheme editor, scheduled release, copy-week, seen receipts, results table),
+  Meets (entries/results/debrief roll-up), Feed, Injury board, Messages,
+  Announcements, Schedule, Roster, Settings. Brand logo/icons wired in
+  (`npm run icons` regenerates from `assets/brand/`).
+- **Mobile**: Today / Week (athlete view + coach editor parity) / Feed (+manual
+  entry, review tray) / Chat / More (meets + debrief form, shoes, injury +
+  fatigue, announcements, schedule, team, settings incl. notification prefs +
+  account deletion). Sync is behind `SyncProvider` (`lib/sync.ts`) — the
+  HealthKit adapter is the dev-client-build TODO; manual entry covers Expo Go.
+- **Verified**: all workspaces typecheck, `next build` passes, Metro export
+  bundles. Migrations NOT yet run against a live DB (no Docker here) — run
+  `supabase db push` / `db reset` first.
+- **Remaining**: OAuth (Apple + native Google), EAS dev-client build
+  (HealthKit + real push delivery), Sentry/PostHog wiring.
 
 Week 1 feature set is code-complete: auth on both surfaces, profile sync
 (`sync_user` RPC on app load), team create/join via codes (`create_team`,

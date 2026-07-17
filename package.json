@@ -24,10 +24,12 @@
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "db:diff": "supabase db diff",
     "db:push": "supabase db push",
-    "db:reset": "supabase db reset"
+    "db:reset": "supabase db reset",
+    "icons": "node scripts/generate-icons.mjs"
   },
   "devDependencies": {
     "prettier": "^3.4.2",
+    "sharp": "^0.35.3",
     "typescript": "~5.9.2"
   },
   "overrides": {

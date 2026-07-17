@@ -16,11 +16,14 @@ import type {
   InjuryStatus,
   MeetType,
   ReleaseState,
+  ReminderLead,
   Role,
   MemberStatus,
   PushPlatform,
   ShoeCategory,
+  UploadMode,
 } from './enums';
+import type { NotificationPrefs } from './notifications';
 import type { AssignmentOverrides, RaceSplits, RepScheme, Splits } from './json';
 
 export type UUID = string;
@@ -40,6 +43,14 @@ export interface User {
   photo_url: string | null;
   class_year: string | null;
   events: string | null;
+  /** Coach display title, e.g. "Head Coach" (PRD §5.1). */
+  title: string | null;
+  /** How detected workouts enter the team: auto-publish or review tray. */
+  upload_mode: UploadMode;
+  /** Per-category push toggles; missing key = category default. */
+  notification_prefs: NotificationPrefs;
+  /** Event reminder lead time (off / 1h / morning_of). */
+  reminder_lead: ReminderLead;
   created_at: Timestamp;
 }
 
@@ -49,6 +60,8 @@ export interface Team {
   school: string | null;
   timezone: string;
   feed_visible_to_athletes: boolean;
+  /** Coach-enabled evening split nudge (off by default, PRD §6.4). */
+  split_nudge_enabled: boolean;
   created_at: Timestamp;
 }
 
@@ -311,7 +324,10 @@ export interface TeamEvent {
   starts_at: Timestamp;
   location: string | null;
   notes: string | null;
+  /** 'weekly' when the event repeats, else null. */
   recurrence: string | null;
+  /** ISO weekdays it repeats on (1=Mon..7=Sun); null/empty = the anchor's weekday. */
+  recurrence_days: number[] | null;
   created_by: UUID;
 }
 
@@ -325,4 +341,11 @@ export interface PushToken {
   user_id: ClerkUserId;
   expo_token: string;
   platform: PushPlatform;
+}
+
+/** Lightweight 👍 acknowledgment on an announcement (PRD §5.7). */
+export interface AnnouncementReaction {
+  announcement_id: UUID;
+  team_member_id: UUID;
+  created_at: Timestamp;
 }

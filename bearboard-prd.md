@@ -25,7 +25,7 @@ Bearboard is a team-centric training platform that combines:
 3. **Communication** — DMs, group chats, full-team chat, and announcements replace the weekly email thread.
 4. **Status** — injury/fatigue tracking, shoe mileage, weekly schedule with reminders.
 
-The wedge vs. Strava: Strava is social-first and plan-blind. Bearboard knows what was *assigned*, so it can show planned vs. actual — at the week level (mileage goal vs. tally) and at the rep level (assigned 5x1k vs. submitted splits).
+The wedge vs. Strava: Strava is social-first and plan-blind. Bearboard knows what was _assigned_, so it can show planned vs. actual — at the week level (mileage goal vs. tally) and at the rep level (assigned 5x1k vs. submitted splits).
 
 ### 1.3 Pilot strategy
 
@@ -39,14 +39,14 @@ Build-and-pitch: develop against the known workflow of the WashU XC/TF program (
 
 ### 2.1 Pilot goals (Fall 2026 XC season)
 
-| Goal | Metric | Target |
-|---|---|---|
-| Coach adoption | Coach posts weekly plan in Bearboard instead of email | 100% of weeks after week 2 |
-| Athlete adoption | Roster onboarded with sync connected | ≥80% of roster |
-| Activity capture | Runs appearing in feed (auto or manual) | ≥70% of athletes' runs |
-| Plan engagement | Athletes marking weekly plan "seen" | ≥75% within 24h of posting |
-| Communication shift | Team announcements via Bearboard | Replaces weekly email |
-| Retention | Weekly active athletes, weeks 4–12 | ≥70% of onboarded roster |
+| Goal                | Metric                                                | Target                     |
+| ------------------- | ----------------------------------------------------- | -------------------------- |
+| Coach adoption      | Coach posts weekly plan in Bearboard instead of email | 100% of weeks after week 2 |
+| Athlete adoption    | Roster onboarded with sync connected                  | ≥80% of roster             |
+| Activity capture    | Runs appearing in feed (auto or manual)               | ≥70% of athletes' runs     |
+| Plan engagement     | Athletes marking weekly plan "seen"                   | ≥75% within 24h of posting |
+| Communication shift | Team announcements via Bearboard                      | Replaces weekly email      |
+| Retention           | Weekly active athletes, weeks 4–12                    | ≥70% of onboarded roster   |
 
 ### 2.2 Non-goals for the pilot
 
@@ -63,6 +63,7 @@ Build-and-pitch: develop against the known workflow of the WashU XC/TF program (
 ### 3.1 Personas
 
 **Coach (primary buyer): "Stiles"**
+
 - Head coach, ~55-athlete combined roster across men's/women's squads
 - Plans in a spreadsheet-like mental model: rows = athletes, columns = days
 - Prescribes one workout skeleton with per-athlete parameter overrides
@@ -71,31 +72,33 @@ Build-and-pitch: develop against the known workflow of the WashU XC/TF program (
 - Success = less admin time, more visibility, athletes actually reading the plan
 
 **Assistant coach**
+
 - Same permissions as head coach for the pilot (role differentiation deferred)
 
 **Athlete: "Will"**
+
 - D3 distance runner, 18–23, owns a Garmin/Coros/Apple Watch
 - Already logs on Strava; will tolerate one more app only if it's low-friction (auto sync) and it's where the plan + team communication actually live
 - Wants: see the plan, submit splits, message team, track shoes, minimal typing
 
 ### 3.2 Platforms
 
-| Surface | Audience | Stack | MVP? |
-|---|---|---|---|
-| iOS app | Athletes + coaches | React Native / Expo | Yes (TestFlight) |
-| Android app | Athletes + coaches | React Native / Expo | Yes (Play internal testing) |
-| Web app | Coaches (command center: plan grid, roster, dashboards) | Next.js | Yes |
-| Athlete web | Athletes | — | No (deferred indefinitely) |
+| Surface     | Audience                                                | Stack               | MVP?                        |
+| ----------- | ------------------------------------------------------- | ------------------- | --------------------------- |
+| iOS app     | Athletes + coaches                                      | React Native / Expo | Yes (TestFlight)            |
+| Android app | Athletes + coaches                                      | React Native / Expo | Yes (Play internal testing) |
+| Web app     | Coaches (command center: plan grid, roster, dashboards) | Next.js             | Yes                         |
+| Athlete web | Athletes                                                | —                   | No (deferred indefinitely)  |
 
-**Parity rule:** every coach capability must be usable from the mobile app. The web app is where grid editing is *pleasant*; the app is where it's *possible* (mobile grid = per-athlete list editing rather than a spreadsheet view).
+**Parity rule:** every coach capability must be usable from the mobile app. The web app is where grid editing is _pleasant_; the app is where it's _possible_ (mobile grid = per-athlete list editing rather than a spreadsheet view).
 
 **Device floor:** iOS **15.1** minimum (Expo SDK 54's floor). This is a hard constraint, not a preference — the stack cannot target lower.
 
-| Coach device | Max iOS | Bearboard app? |
-|---|---|---|
-| iPhone 6s / SE (1st gen) | 15.8 | ✓ Works |
-| iPhone 7 and newer | 15.8+ | ✓ Works |
-| iPhone 6 | 12.5.7 | ✗ **Cannot run** — web only |
+| Coach device             | Max iOS | Bearboard app?              |
+| ------------------------ | ------- | --------------------------- |
+| iPhone 6s / SE (1st gen) | 15.8    | ✓ Works                     |
+| iPhone 7 and newer       | 15.8+   | ✓ Works                     |
+| iPhone 6                 | 12.5.7  | ✗ **Cannot run** — web only |
 
 Decision: build for iOS 15.1+ and accept the iPhone-6 edge case. The coach's command center is the **web app** anyway, so a true iPhone 6 degrades him to web-only rather than blocking the pilot. No action item; not a launch risk.
 
@@ -126,26 +129,27 @@ Android minimum: 10 (API 29) — Health Connect requires Android 9+; API 29+ kee
 
 ### 4.4 Permissions matrix (MVP)
 
-| Capability | Coach | Athlete |
-|---|---|---|
-| Create team, manage join codes | ✓ | — |
-| Add/remove members, manage squads | ✓ | — |
-| View all athlete activities + private notes | ✓ | — |
-| View teammate activities in feed | ✓ | Only if coach enables team-visible feed |
-| Like activities | ✓ | ✓ (if feed visible) |
-| View athlete profile: injury/fatigue, shoe mileage, weekly mileage vs. goal | ✓ | — (teammates see profile w/ these hidden) |
-| Create/edit/assign workouts, set per-athlete overrides | ✓ | — |
-| Submit workout results/splits | — | ✓ (own only) |
-| Set weekly mileage goals | ✓ | — |
-| Post announcements | ✓ | — |
-| Create schedule events | ✓ | — |
-| DM anyone on team | ✓ | ✓ |
-| Create group chats | ✓ | ✓ (athlete-created groups: athletes only; coach can create any) |
-| Update own injury/fatigue status | ✓ (on behalf of athlete too) | ✓ |
-| Injury board (all injured athletes) | ✓ | — |
-| Edit/delete own account, disconnect sync, delete own activities | ✓ | ✓ |
+| Capability                                                                  | Coach                        | Athlete                                                         |
+| --------------------------------------------------------------------------- | ---------------------------- | --------------------------------------------------------------- |
+| Create team, manage join codes                                              | ✓                            | —                                                               |
+| Add/remove members, manage squads                                           | ✓                            | —                                                               |
+| View all athlete activities + private notes                                 | ✓                            | —                                                               |
+| View teammate activities in feed                                            | ✓                            | Only if coach enables team-visible feed                         |
+| Like activities                                                             | ✓                            | ✓ (if feed visible)                                             |
+| View athlete profile: injury/fatigue, shoe mileage, weekly mileage vs. goal | ✓                            | — (teammates see profile w/ these hidden)                       |
+| Create/edit/assign workouts, set per-athlete overrides                      | ✓                            | —                                                               |
+| Submit workout results/splits                                               | —                            | ✓ (own only)                                                    |
+| Set weekly mileage goals                                                    | ✓                            | —                                                               |
+| Post announcements                                                          | ✓                            | —                                                               |
+| Create schedule events                                                      | ✓                            | —                                                               |
+| DM anyone on team                                                           | ✓                            | ✓                                                               |
+| Create group chats                                                          | ✓                            | ✓ (athlete-created groups: athletes only; coach can create any) |
+| Update own injury/fatigue status                                            | ✓ (on behalf of athlete too) | ✓                                                               |
+| Injury board (all injured athletes)                                         | ✓                            | —                                                               |
+| Edit/delete own account, disconnect sync, delete own activities             | ✓                            | ✓                                                               |
 
 **Feed visibility toggle (team-level, coach-controlled):**
+
 - **Team-visible (default, confirmed for the WashU pilot):** athletes see teammates' activities in the feed and can like them.
 - **Coach-only:** athletes see only their own activities; feed is private to coaches.
 - Toggle is instant and retroactive (it gates queries, not data).
@@ -167,15 +171,16 @@ Android minimum: 10 (API 29) — Health Connect requires Android 9+; API 29+ kee
 
 Coaches plan and release in two distinct layers, on two different clocks. Bearboard must model both separately.
 
-- **Layer 1 — Day skeleton (the week shape).** Released in advance, usually the whole week at once. Says *what kind of day* it is: Easy, Workout, Long Run, Race, Rest, XT, Double, Lift. Low detail on purpose ("Wednesday = Workout"). This is what athletes plan their lives around.
+- **Layer 1 — Day skeleton (the week shape).** Released in advance, usually the whole week at once. Says _what kind of day_ it is: Easy, Workout, Long Run, Race, Rest, XT, Double, Lift. Low detail on purpose ("Wednesday = Workout"). This is what athletes plan their lives around.
 - **Layer 2 — Workout detail (the prescription).** The actual session: warm-up, drills, rep scheme, targets, per-athlete parameters. In-season, the coach frequently writes this the night before or the morning of — because it depends on weather, how the team looked at practice, who's banged up, and what's coming on the race schedule.
 
-**Consequence:** a day can exist in a published week with a skeleton and *no detail yet*. Athletes see "Wednesday — Workout · details coming." Detail arrives later as its own release event with its own push notification. During the summer (per the reference email) both layers ship together; in-season they decouple. The product supports both without the coach changing modes.
+**Consequence:** a day can exist in a published week with a skeleton and _no detail yet_. Athletes see "Wednesday — Workout · details coming." Detail arrives later as its own release event with its own push notification. During the summer (per the reference email) both layers ship together; in-season they decouple. The product supports both without the coach changing modes.
 
 **Detail release control (per day):**
+
 - `Draft` — coach only. Default state for any new detail.
 - `Published` — visible to assigned athletes now. One tap from draft.
-- `Scheduled` — *optional* convenience: detail auto-publishes at a coach-picked datetime.
+- `Scheduled` — _optional_ convenience: detail auto-publishes at a coach-picked datetime.
 
 **No default release time is baked into the product.** Stiles has no fixed release habit — sometimes the week ships together, sometimes a workout drops the night before, sometimes the morning of. The product must never assume a rhythm or nag him toward one. Scheduling is an opt-in convenience with an empty datetime picker, not a default. The primary path is always: write it, hit Publish, done.
 
@@ -213,17 +218,20 @@ Full parity, list-based instead of grid: Week screen → tap a day → set day_t
 ### 5.3 Activity sync & upload
 
 **Auto sync (MVP):**
+
 - **iOS — HealthKit:** read workouts (running, cycling, swimming, hiking/walking, other) with distance, duration, avg/max HR, calories, elevation if present. Garmin, Coros, and Apple Watch all write into Apple Health when the athlete enables it in their vendor app — this is the documented setup path in onboarding (per-vendor setup instructions screen). Use background delivery/anchored queries so new workouts appear without opening the app; fall back to foreground refresh on app open.
 - **Android — Health Connect:** equivalent read of exercise sessions. Garmin/Coros sync into Health Connect via their Android apps. Foreground sync on app open + periodic background sync (WorkManager) — Health Connect background access is more restrictive; set expectations that Android may require opening the app.
 - **Known limitation (communicate in-app):** HealthKit/Health Connect deliver summary metrics, not lap-by-lap splits. Rep splits come from athlete submission (5.5). Direct Garmin/Coros APIs bring splits in v1.1.
 
 **Upload modes (per-athlete setting):**
+
 1. **Auto:** every detected workout uploads to the team automatically.
 2. **Review:** new detected workouts land in a "pending" tray; athlete taps to approve/discard each. Default = Review (respects athlete comfort, matches spec).
 
 **Manual entry:** type, date/time, distance, duration, optional HR/elevation/notes. Covers no-watch athletes, pool/lift sessions, and watch failures.
 
 **Activity record fields:** type, title (auto-generated, editable: "Morning Run"), date/time, distance, moving time, pace (derived), avg/max HR, elevation, shoe (auto-assigned to default shoe, editable), athlete description (team-visible if feed is team-visible), **private note to coach** (always coach-only, e.g., "calf felt tight on the last rep"), source (HealthKit / Health Connect / manual).
+
 - Edit/delete own activities anytime.
 - Deduplication: match on type + start time (±3 min) + duration to prevent double import (e.g., manual + later sync).
 
@@ -282,12 +290,14 @@ Full parity, list-based instead of grid: Week screen → tap a day → set day_t
 Races are first-class, not just another calendar event — they're what the training is aimed at ("What are we training for? = NCAA's, Saturday, November 21").
 
 **Season race schedule (coach-managed):**
+
 - Meet record: name, date, host/location, course (free text), type (dual / invitational / conference / regional / national / time trial), travel/departure time, notes (course description, uniform, packing).
 - **Squad/individual entry list:** coach marks who is racing each meet — whole team, a squad, or a hand-picked list. Athletes not entered still see the meet on the team calendar, flagged "not entered."
 - **Race entries can specify an event per athlete** (relevant for track: 800m, 1500m, 5k; for XC: varsity/JV race). Athlete-level field on the entry.
 - **Goal race flag:** one or more meets marked as the season's target (NCAA's). Surfaces on the team home screen as a countdown ("131 days to NCAA's") — carries the culture function of the coach's "what are we training for" section.
 
 **Interaction with the plan:**
+
 - A meet auto-creates a `Race` training day for entered athletes on that date; the grid column renders as a race day (distinct styling), and the coach still overrides per athlete (e.g., someone racing an open 800 vs. racing the 5k, or an athlete racing while another does a workout instead).
 - Race week shapes are fully coach-defined day-by-day — the seven-day editable grid handles taper/shakeout/pre-meet patterns with no special-casing.
 
@@ -295,10 +305,12 @@ Races are first-class, not just another calendar event — they're what the trai
 
 After every race, the athlete completes a structured debrief. This is the reflective counterpart to split submission, and it's the thing that turns Bearboard from a logging tool into a coaching tool — it captures context that a time and a place never will, and it does it while memory is fresh instead of in a hallway conversation three days later.
 
-*Objective section:*
+_Objective section:_
+
 - Event, official time/mark, place, splits (per-lap or per-mile, athlete-entered)
 
-*Reflective section (the core):*
+_Reflective section (the core):_
+
 - **What went well in the race?** (free text)
 - **What didn't go well?** (free text)
 - **What did you do well in preparation?** (free text)
@@ -308,14 +320,16 @@ After every race, the athlete completes a structured debrief. This is the reflec
 - **Sleep and fueling in race week** (optional short text)
 - **Anything you want your coach to know** (free text)
 
-*Behavior:*
+_Behavior:_
+
 - Push prompt the evening after a meet: "Log your race debrief." Snoozeable, never nagging — one reminder, then it sits in the athlete's pending items.
 - **Visibility: strictly athlete + coaches. Never teammates, under any feed setting.** The honesty of this feature depends entirely on that guarantee, and the UI states it plainly on the form ("Only your coaches can see this"). This is the single most privacy-sensitive surface in the app and RLS must enforce it at the row level, not the client.
 - Athlete can edit their own debrief at any time; edit history is not surfaced to the coach (encourage honesty, not performance).
 
-*Coach views:*
+_Coach views:_
+
 - Per-meet debrief roll-up: every entered athlete's mark/place plus their reflection, in one scrollable review — replaces the coach reading 40 emails or catching people one at a time.
-- Per-athlete debrief history down the season, with academic-stress and fatigue scores plotted against race performance. Over a season this becomes the most valuable dataset the coach has ever had: it directly connects *life load* to *race outcome* per athlete.
+- Per-athlete debrief history down the season, with academic-stress and fatigue scores plotted against race performance. Over a season this becomes the most valuable dataset the coach has ever had: it directly connects _life load_ to _race outcome_ per athlete.
 - Aggregate signal (v1.1): team-wide academic stress spiking in a given week (midterms, finals) is a real, actionable training-load input.
 
 **Out of scope:** automatic results import from live-timing services (TFRRS/DirectAthletics-style). I have not verified that a supported public API or license path exists, and I'm not going to design around an assumption. Manual entry for the pilot; flagged as a v2 research item, not a commitment.
@@ -345,16 +359,16 @@ After every race, the athlete completes a structured debrief. This is the reflec
 
 ### 6.1 Stack (reuse Polyscope stack)
 
-| Layer | Choice | Notes |
-|---|---|---|
-| Mobile | React Native 0.81 / Expo SDK 54 / TypeScript | Expo Pro already purchased; EAS Build for TestFlight/Play internal |
-| Web (coach) | Next.js + TypeScript + Tailwind | Deployed on Vercel free tier |
-| Auth | Clerk | Shared across web + mobile; roles/team membership live in Postgres, not Clerk metadata |
-| DB / API / Realtime / Storage | Supabase (Postgres, RLS, Realtime, Storage) | Free tier to start; RLS enforces the permissions matrix server-side |
-| Background jobs | Supabase Edge Functions (or Fly.io Deno worker if needed) | Weekly mileage rollups, notification fan-out, reminder scheduling |
-| Push | Expo Push Notifications | Free, unified iOS/Android |
-| Health data | HealthKit (react-native-health / expo-health APIs) + Health Connect (react-native-health-connect) | Requires dev-client builds (not Expo Go) |
-| Monitoring | Sentry + PostHog | Same setup as Polyscope |
+| Layer                         | Choice                                                                                            | Notes                                                                                  |
+| ----------------------------- | ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| Mobile                        | React Native 0.81 / Expo SDK 54 / TypeScript                                                      | Expo Pro already purchased; EAS Build for TestFlight/Play internal                     |
+| Web (coach)                   | Next.js + TypeScript + Tailwind                                                                   | Deployed on Vercel free tier                                                           |
+| Auth                          | Clerk                                                                                             | Shared across web + mobile; roles/team membership live in Postgres, not Clerk metadata |
+| DB / API / Realtime / Storage | Supabase (Postgres, RLS, Realtime, Storage)                                                       | Free tier to start; RLS enforces the permissions matrix server-side                    |
+| Background jobs               | Supabase Edge Functions (or Fly.io Deno worker if needed)                                         | Weekly mileage rollups, notification fan-out, reminder scheduling                      |
+| Push                          | Expo Push Notifications                                                                           | Free, unified iOS/Android                                                              |
+| Health data                   | HealthKit (react-native-health / expo-health APIs) + Health Connect (react-native-health-connect) | Requires dev-client builds (not Expo Go)                                               |
+| Monitoring                    | Sentry + PostHog                                                                                  | Same setup as Polyscope                                                                |
 
 ### 6.2 Data model (core tables)
 
@@ -431,26 +445,27 @@ push_tokens(user_id, expo_token, platform)
 
 ### 6.4 Notifications inventory
 
-**Decision:** every category below fires by default, and **every category is independently toggleable** in athlete settings (plus per-conversation mute for chats). Detail-release pushes are the ones athletes genuinely want — they're the reason to keep notifications on at all — so they must never be buried behind a blanket app-level mute. The settings screen groups them individually rather than offering one all-or-nothing switch, precisely so that a notification-fatigued athlete turns off *announcements* instead of turning off *everything*.
+**Decision:** every category below fires by default, and **every category is independently toggleable** in athlete settings (plus per-conversation mute for chats). Detail-release pushes are the ones athletes genuinely want — they're the reason to keep notifications on at all — so they must never be buried behind a blanket app-level mute. The settings screen groups them individually rather than offering one all-or-nothing switch, precisely so that a notification-fatigued athlete turns off _announcements_ instead of turning off _everything_.
 
 **Policy (locked):** every category below fires by default, and every category is **individually toggleable by the athlete** in Settings → Notifications. No all-or-nothing switch — an athlete who mutes announcements must not thereby lose workout drops.
 
-Design intent: **workout detail releases are the notification athletes actually want**, and everything else is competing for the same attention budget. If an athlete is going to mute one thing, the settings screen should make it easy for them to mute *that* thing rather than uninstall or disable notifications wholesale. The categories are therefore listed in the settings UI grouped by tier, with the training tier framed as the reason the app is worth allowing notifications from at all.
+Design intent: **workout detail releases are the notification athletes actually want**, and everything else is competing for the same attention budget. If an athlete is going to mute one thing, the settings screen should make it easy for them to mute _that_ thing rather than uninstall or disable notifications wholesale. The categories are therefore listed in the settings UI grouped by tier, with the training tier framed as the reason the app is worth allowing notifications from at all.
 
-| Tier | Trigger | Recipients | Default |
-|---|---|---|---|
-| **Training (high value)** | Workout detail released (manual or scheduled) | Assigned athletes | On |
-| | Week skeleton published | Team / squad | On |
-| | Workout detail updated after release | Assigned athletes | On (coach opts in per edit) |
-| **Racing** | Meet entry posted / race day tomorrow | Entered athletes | On |
-| | Race debrief prompt (evening after a meet) | Entered athletes | On (single reminder, snoozeable) |
-| **Communication** | New message | Conversation members | On (also mutable per conversation) |
-| | New announcement | Target audience | On |
-| **Logistics** | Event reminder | Event targets | On, 1h before (athlete-adjustable: off / 1h / morning-of) |
-| | New pending activities to review | Athlete (review mode) | On |
-| **Optional nudges** | Split nudge (evening of workout day, no results submitted) | Assigned athletes | **Off** (coach-enabled per team) |
+| Tier                      | Trigger                                                    | Recipients            | Default                                                   |
+| ------------------------- | ---------------------------------------------------------- | --------------------- | --------------------------------------------------------- |
+| **Training (high value)** | Workout detail released (manual or scheduled)              | Assigned athletes     | On                                                        |
+|                           | Week skeleton published                                    | Team / squad          | On                                                        |
+|                           | Workout detail updated after release                       | Assigned athletes     | On (coach opts in per edit)                               |
+| **Racing**                | Meet entry posted / race day tomorrow                      | Entered athletes      | On                                                        |
+|                           | Race debrief prompt (evening after a meet)                 | Entered athletes      | On (single reminder, snoozeable)                          |
+| **Communication**         | New message                                                | Conversation members  | On (also mutable per conversation)                        |
+|                           | New announcement                                           | Target audience       | On                                                        |
+| **Logistics**             | Event reminder                                             | Event targets         | On, 1h before (athlete-adjustable: off / 1h / morning-of) |
+|                           | New pending activities to review                           | Athlete (review mode) | On                                                        |
+| **Optional nudges**       | Split nudge (evening of workout day, no results submitted) | Assigned athletes     | **Off** (coach-enabled per team)                          |
 
 **Anti-fatigue rules:**
+
 - Never more than one push per trigger event — no re-nags, no escalation. The split nudge and debrief prompt fire once and then live silently in the athlete's pending-items list.
 - Coach edits to a published detail only push if the coach explicitly checks "notify" on that edit (typo fixes shouldn't buzz 55 phones).
 - Quiet hours: no pushes 10:00 PM–6:00 AM team time; queued notifications deliver at 6:00 AM. Exception: none in MVP.
@@ -467,6 +482,7 @@ Solo developer, Claude Code-accelerated, July 13 → August 11 (~4.5 weeks), wit
 **COROS is deliberately deferred to post-pilot (Oct+).** Rationale: (a) COROS activities already reach Bearboard via Apple Health / Health Connect, so no athlete is blocked; (b) the only thing the direct API adds is lap splits, which athletes are entering manually via the results form anyway; (c) a partner application is materially stronger when it can cite a live product with ~55 active collegiate users than when it cites a PRD. Apply once the pilot is running.
 
 ### Week 1 (Jul 13–19): Foundation
+
 - Monorepo scaffold (Expo app + Next.js web + shared types package), Supabase project, Clerk wired to both surfaces
 - Schema migration v1, RLS policies for teams/roles
 - Team create/join flows (codes), roster + squads management (web + mobile)
@@ -474,14 +490,16 @@ Solo developer, Claude Code-accelerated, July 13 → August 11 (~4.5 weeks), wit
 - **Checkpoint:** a coach and an athlete can both be inside the same team on real devices
 
 ### Week 2 (Jul 20–26): Planning core
+
 - Training days (all 7, every day_type), workout details with independent release states, rep schemes, saved templates
 - Per-athlete overrides (incl. day_type replacement), mileage goals
 - Web plan grid (flagship screen) with two-row column headers + mobile coach editing flow
 - Scheduled detail release job (night-before / morning-of / custom), publish-week, athlete This Week + Today views, two-layer seen receipts
 - Meets: create, entries, goal-race flag, auto-created race days
-- **Checkpoint:** recreate Coach Stiles' actual attached summer email inside Bearboard *and* demo the in-season flow — skeleton published Sunday, Wednesday's workout detail auto-dropping Tuesday at 7 PM. This is the demo script.
+- **Checkpoint:** recreate Coach Stiles' actual attached summer email inside Bearboard _and_ demo the in-season flow — skeleton published Sunday, Wednesday's workout detail auto-dropping Tuesday at 7 PM. This is the demo script.
 
 ### Week 3 (Jul 27–Aug 2): Activities
+
 - HealthKit integration (dev-client build), Health Connect integration, review-tray + auto modes, dedup
 - Manual entry, activity editing, private notes, shoe tracker + auto mileage
 - Feed (coach + athlete variants), likes, visibility toggle, athlete/coach profile screens
@@ -489,6 +507,7 @@ Solo developer, Claude Code-accelerated, July 13 → August 11 (~4.5 weeks), wit
 - **Checkpoint:** Will's real Garmin runs appear in the feed untouched; dashboard shows mileage vs. goal
 
 ### Week 4 (Aug 3–9): Communication & status
+
 - Messaging (DM/group/team, images, unread badges, push)
 - Announcements (+pinned), schedule events + reminders, injury/fatigue status + coach board
 - Workout results/splits entry + coach results table
@@ -497,6 +516,7 @@ Solo developer, Claude Code-accelerated, July 13 → August 11 (~4.5 weeks), wit
 - **Checkpoint:** feature-complete pilot build
 
 ### Aug 10–17: Hardening + onboarding prep
+
 - Onboarding polish (vendor sync setup instructions), empty states, Sentry triage, seed demo data, TestFlight external group + Play internal track invites ready
 - **Deliverable:** demo-ready build + 5-minute pitch flow for Coach Stiles, in his hands before Aug 18
 - Prep a 10-minute roster onboarding for the first team meeting (join code + sync setup walkthrough); adoption lives or dies here
@@ -504,27 +524,29 @@ Solo developer, Claude Code-accelerated, July 13 → August 11 (~4.5 weeks), wit
 **Slack plan:** if behind by end of Week 3, cut in this order: (1) split nudge notifications, (2) fatigue check-ins, (3) recurrence on events, (4) image attachments in chat, (5) Android background sync (foreground-only). The plan grid, sync, feed, and messaging are never cut.
 
 ### v1.1 (Sept–Oct, during pilot)
+
 Direct Garmin API integration (applied for in July; lap splits auto-fill the results form when available). **COROS API application submitted in this window**, once the pilot provides real usage evidence, teammate tagging on activities, recurring habits checklist (core/drills/strides compliance), season goal countdown, comments on activities, results progression charts, availability-based meeting scheduling, athlete data export.
 
 ### v2 (post-pilot, if expanding)
+
 Multi-team UX, coach role tiers (head/assistant), team analytics (ACWR-style load flags), public store launch, rebrand evaluation, onboarding for non-WashU teams via coach referrals.
 
 ---
 
 ## 8. Risks & mitigations
 
-| Risk | Likelihood | Mitigation |
-|---|---|---|
-| Coach doesn't adopt (habit inertia) | High | Grid mirrors his email exactly; copy-last-week; pitch = "same table, but athletes' runs flow back automatically"; web-first coach UX; you onboard him personally |
-| Athletes don't connect sync (setup friction: watch → vendor app → Health) | Medium-High | Per-vendor illustrated setup guides in onboarding; manual entry as pressure valve; captain-led onboarding session at first practice |
-| HealthKit/Health Connect data gaps (no splits, Android background limits) | Certain (known) | Set expectations in-app; splits via athlete submission; Garmin/Coros direct APIs in v1.1 — **apply for API access now** |
-| Coach on an iPhone 6 (iOS 12, below the Expo floor) | Low | Accepted: web app covers 100% of coach features; no engineering work planned |
-| Athletes don't trust debrief privacy → dishonest reflections | Medium | Row-level RLS, explicit in-UI guarantee, never surfaced in any feed; coach reinforces it verbally at first meeting |
-| Garmin developer program suspended / long approval | Medium | Unverified conflicting reports; apply in July, MVP does not depend on it; aggregators (Terra/Spike) as unvetted fallback |
-| COROS athletes lack lap splits until v1.2 | Low | Accepted: Health Connect/HealthKit covers summaries; manual split entry covers reps; COROS application deferred to post-pilot by design |
-| Solo-dev timeline slip | Medium | Ordered cut list (§7); deadline is soft into early season; Week 2 checkpoint (grid demo) is the true must-hit for the pitch |
-| Apple/Google testing hurdles | Low | TestFlight internal → external group (external review is light); Play internal track has no review |
-| Data privacy concerns from athletes | Low-Med | Review-mode default, clear visibility rules (injury/shoes never teammate-visible), plain-English privacy policy, delete anytime |
+| Risk                                                                      | Likelihood      | Mitigation                                                                                                                                                       |
+| ------------------------------------------------------------------------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Coach doesn't adopt (habit inertia)                                       | High            | Grid mirrors his email exactly; copy-last-week; pitch = "same table, but athletes' runs flow back automatically"; web-first coach UX; you onboard him personally |
+| Athletes don't connect sync (setup friction: watch → vendor app → Health) | Medium-High     | Per-vendor illustrated setup guides in onboarding; manual entry as pressure valve; captain-led onboarding session at first practice                              |
+| HealthKit/Health Connect data gaps (no splits, Android background limits) | Certain (known) | Set expectations in-app; splits via athlete submission; Garmin/Coros direct APIs in v1.1 — **apply for API access now**                                          |
+| Coach on an iPhone 6 (iOS 12, below the Expo floor)                       | Low             | Accepted: web app covers 100% of coach features; no engineering work planned                                                                                     |
+| Athletes don't trust debrief privacy → dishonest reflections              | Medium          | Row-level RLS, explicit in-UI guarantee, never surfaced in any feed; coach reinforces it verbally at first meeting                                               |
+| Garmin developer program suspended / long approval                        | Medium          | Unverified conflicting reports; apply in July, MVP does not depend on it; aggregators (Terra/Spike) as unvetted fallback                                         |
+| COROS athletes lack lap splits until v1.2                                 | Low             | Accepted: Health Connect/HealthKit covers summaries; manual split entry covers reps; COROS application deferred to post-pilot by design                          |
+| Solo-dev timeline slip                                                    | Medium          | Ordered cut list (§7); deadline is soft into early season; Week 2 checkpoint (grid demo) is the true must-hit for the pitch                                      |
+| Apple/Google testing hurdles                                              | Low             | TestFlight internal → external group (external review is light); Play internal track has no review                                                               |
+| Data privacy concerns from athletes                                       | Low-Med         | Review-mode default, clear visibility rules (injury/shoes never teammate-visible), plain-English privacy policy, delete anytime                                  |
 
 ---
 
@@ -532,6 +554,6 @@ Multi-team UX, coach role tiers (head/assistant), team analytics (ACWR-style loa
 
 **Resolved:** notification defaults — all categories ON, each independently toggleable (§6.4) · iOS floor 15.1, web fallback for iPhone 6 (§3.2) · hard deadline Aug 18 (§7) · no default detail-release time (§5.2.1) · race debrief is athlete-authored + coach-only (§5.9a) · feed launches team-visible (§4.4) · notifications all-on by default with per-category athlete toggles (§6.4).
 
-1. **Objective race results** (time, place, splits) — athlete-entered by default, with coach able to correct? The *debrief* is unambiguously athlete-authored; only the objective fields are in question. Recommend athlete-entered + coach-editable.
+1. **Objective race results** (time, place, splits) — athlete-entered by default, with coach able to correct? The _debrief_ is unambiguously athlete-authored; only the objective fields are in question. Recommend athlete-entered + coach-editable.
 2. **Squad structure at WashU** beyond Men/Women — does Stiles think in event groups (distance / mid-d / sprints / throws) during track season? Affects whether squads need to be many-to-many from day one (they are in the schema; this is a UI question).
 3. **Garmin program status** — unresolved conflicting reports on whether new applications are being accepted. Submitting the application is the only way to find out. No MVP dependency.

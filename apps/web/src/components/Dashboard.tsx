@@ -1,11 +1,73 @@
 'use client';
 
-import { UserButton, useUser } from '@clerk/nextjs';
-import { useCallback, useEffect, useState } from 'react';
+import { UserButton } from '@clerk/nextjs';
+import { useEffect, useState } from 'react';
+import {
+  LayoutDashboard,
+  CalendarDays,
+  Flag,
+  Activity,
+  HeartPulse,
+  MessageSquare,
+  Megaphone,
+  Clock,
+  Users,
+  Settings as SettingsIcon,
+  type LucideIcon,
+} from 'lucide-react';
+import type { Membership } from '@/lib/team-types';
 import { useSupabase } from '@/lib/useSupabase';
-import type { JoinCodeRow, Membership, RosterRow, SquadRow } from '@/lib/team-types';
+import { Logo } from './Logo';
+import { ComplianceTab } from './tabs/ComplianceTab';
 import { PlanGrid } from './plan/PlanGrid';
+import { MeetsTab } from './tabs/MeetsTab';
+import { FeedTab } from './tabs/FeedTab';
+import { InjuryTab } from './tabs/InjuryTab';
+import { MessagesTab } from './tabs/MessagesTab';
+import { AnnouncementsTab } from './tabs/AnnouncementsTab';
+import { ScheduleTab } from './tabs/ScheduleTab';
+import { RosterTab } from './tabs/RosterTab';
+import { SettingsTab } from './tabs/SettingsTab';
 
+type TabKey =
+  | 'dashboard'
+  | 'plan'
+  | 'meets'
+  | 'feed'
+  | 'injury'
+  | 'messages'
+  | 'announcements'
+  | 'schedule'
+  | 'roster'
+  | 'settings';
+
+const COACH_TABS: Array<{ key: TabKey; label: string; icon: LucideIcon }> = [
+  { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { key: 'plan', label: 'Plan', icon: CalendarDays },
+  { key: 'meets', label: 'Meets', icon: Flag },
+  { key: 'feed', label: 'Feed', icon: Activity },
+  { key: 'injury', label: 'Injury board', icon: HeartPulse },
+  { key: 'messages', label: 'Messages', icon: MessageSquare },
+  { key: 'announcements', label: 'Announcements', icon: Megaphone },
+  { key: 'schedule', label: 'Schedule', icon: Clock },
+  { key: 'roster', label: 'Roster & squads', icon: Users },
+  { key: 'settings', label: 'Settings', icon: SettingsIcon },
+];
+
+const ATHLETE_TABS: Array<{ key: TabKey; label: string; icon: LucideIcon }> = [
+  { key: 'feed', label: 'Feed', icon: Activity },
+  { key: 'messages', label: 'Messages', icon: MessageSquare },
+  { key: 'announcements', label: 'Announcements', icon: Megaphone },
+  { key: 'schedule', label: 'Schedule', icon: Clock },
+  { key: 'roster', label: 'Roster', icon: Users },
+  { key: 'settings', label: 'Settings', icon: SettingsIcon },
+];
+
+/**
+ * Signed-in, in-a-team shell: brand sidebar (top bar on small screens) +
+ * the active tab. Coaches get the full command center; the athlete web view
+ * is a companion (the app is the athlete surface — PRD §3.2).
+ */
 export function Dashboard({
   membership,
   onChanged,
@@ -13,320 +75,82 @@ export function Dashboard({
   membership: Membership;
   onChanged: () => void;
 }) {
-  const { user } = useUser();
-  const getSupabase = useSupabase();
   const isCoach = membership.role === 'coach';
-  const teamId = membership.team.id;
+  const tabs = isCoach ? COACH_TABS : ATHLETE_TABS;
+  const [tab, setTab] = useState<TabKey>(isCoach ? 'dashboard' : 'feed');
+  const getSupabase = useSupabase();
 
-  const [roster, setRoster] = useState<RosterRow[]>([]);
-  const [squads, setSquads] = useState<SquadRow[]>([]);
-  const [codes, setCodes] = useState<JoinCodeRow[]>([]);
-  const [newSquad, setNewSquad] = useState('');
-  const [error, setError] = useState('');
-  const [copied, setCopied] = useState<string | null>(null);
-  const [view, setView] = useState<'plan' | 'roster'>(isCoach ? 'plan' : 'roster');
-
-  const load = useCallback(async () => {
-    setError('');
-    const sb = await getSupabase();
-
-    const { data: rosterData, error: rosterErr } = await sb
-      .from('team_members')
-      .select('id, role, user:users(id, name, photo_url, class_year)')
-      .eq('team_id', teamId)
-      .eq('status', 'active');
-    if (rosterErr) {
-      setError(`Roster: ${rosterErr.message}`);
-      return;
-    }
-    const rows = (rosterData ?? []) as unknown as RosterRow[];
-    rows.sort((a, b) =>
-      a.role === b.role ? a.user.name.localeCompare(b.user.name) : a.role === 'coach' ? -1 : 1,
-    );
-    setRoster(rows);
-
-    const { data: squadData, error: squadErr } = await sb
-      .from('squads')
-      .select('id, name, squad_members(team_member_id)')
-      .eq('team_id', teamId)
-      .order('name');
-    if (squadErr) {
-      setError(`Squads: ${squadErr.message}`);
-      return;
-    }
-    setSquads(
-      (
-        (squadData ?? []) as unknown as Array<{
-          id: string;
-          name: string;
-          squad_members: Array<{ team_member_id: string }>;
-        }>
-      ).map((s) => ({
-        id: s.id,
-        name: s.name,
-        member_ids: s.squad_members.map((m) => m.team_member_id),
-      })),
-    );
-
-    if (isCoach) {
-      const { data: codeData, error: codeErr } = await sb
-        .from('join_codes')
-        .select('role, code')
-        .eq('team_id', teamId)
-        .eq('active', true);
-      if (codeErr) {
-        setError(`Join codes: ${codeErr.message}`);
-        return;
-      }
-      setCodes((codeData ?? []) as JoinCodeRow[]);
-    }
-  }, [getSupabase, teamId, isCoach]);
-
+  // Opportunistically publish any due scheduled details on load, so scheduled
+  // releases work even before the push worker is scheduled (idempotent).
   useEffect(() => {
-    void load();
-  }, [load]);
-
-  async function regenerate(role: 'athlete' | 'coach') {
-    const sb = await getSupabase();
-    const { error } = await sb.rpc('regenerate_join_code', {
-      p_team_id: teamId,
-      p_role: role,
-    });
-    if (error) setError(`Regenerate: ${error.message}`);
-    await load();
-  }
-
-  async function copyCode(code: string) {
-    await navigator.clipboard.writeText(code);
-    setCopied(code);
-    setTimeout(() => setCopied(null), 1500);
-  }
-
-  async function createSquad() {
-    const name = newSquad.trim();
-    if (!name) return;
-    const sb = await getSupabase();
-    const { error } = await sb.from('squads').insert({ team_id: teamId, name });
-    if (error) setError(`Create squad: ${error.message}`);
-    setNewSquad('');
-    await load();
-  }
-
-  async function deleteSquad(id: string) {
-    const sb = await getSupabase();
-    const { error } = await sb.from('squads').delete().eq('id', id);
-    if (error) setError(`Delete squad: ${error.message}`);
-    await load();
-  }
-
-  async function toggleSquad(squad: SquadRow, memberId: string, on: boolean) {
-    const sb = await getSupabase();
-    const { error } = on
-      ? await sb.from('squad_members').insert({ squad_id: squad.id, team_member_id: memberId })
-      : await sb
-          .from('squad_members')
-          .delete()
-          .eq('squad_id', squad.id)
-          .eq('team_member_id', memberId);
-    if (error) setError(`Squad update: ${error.message}`);
-    await load();
-  }
-
-  async function removeMember(memberId: string) {
-    const sb = await getSupabase();
-    const { error } = await sb
-      .from('team_members')
-      .update({ status: 'removed' })
-      .eq('id', memberId);
-    if (error) setError(`Remove: ${error.message}`);
-    await load();
-  }
-
-  async function leaveTeam() {
-    const sb = await getSupabase();
-    const { error } = await sb.rpc('leave_team', { p_team_id: teamId });
-    if (error) {
-      setError(`Leave: ${error.message}`);
-      return;
-    }
-    onChanged();
-  }
-
-  const myMemberId = roster.find((r) => r.user.id === user?.id)?.id;
+    void (async () => {
+      const sb = await getSupabase();
+      await sb.rpc('release_due_details');
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
-    <main className={`mx-auto p-6 ${isCoach && view === 'plan' ? 'max-w-[1400px]' : 'max-w-5xl'}`}>
-      <header className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-brand-maroon">{membership.team.name}</h1>
-          <p className="text-sm text-gray-500">
+    <div className="flex min-h-screen flex-col bg-gray-50 md:flex-row">
+      {/* Sidebar (desktop) / top bar (mobile) */}
+      <aside className="flex shrink-0 flex-col border-b border-gray-200 bg-white md:min-h-screen md:w-60 md:border-b-0 md:border-r">
+        <div className="flex items-center justify-between px-4 py-4 md:block">
+          <Logo size={30} />
+          <div className="md:hidden">
+            <UserButton />
+          </div>
+        </div>
+        <div className="min-w-0 px-3 pb-2 md:pb-0">
+          <p className="truncate text-sm font-semibold text-brand-forest">{membership.team.name}</p>
+          <p className="truncate text-xs text-gray-500">
             {membership.team.school ? `${membership.team.school} · ` : ''}
-            You are a {membership.role}.
+            {isCoach ? 'Coach' : 'Athlete'}
           </p>
         </div>
-        <UserButton />
-      </header>
-
-      {error ? (
-        <div className="mb-4 rounded border border-brand-crimson/30 bg-brand-crimson/5 p-3 text-sm text-brand-crimson">
-          {error}
+        <nav className="flex gap-1 overflow-x-auto px-2 py-2 md:mt-2 md:flex-1 md:flex-col md:overflow-visible">
+          {tabs.map((t) => {
+            const Icon = t.icon;
+            const active = tab === t.key;
+            return (
+              <button
+                key={t.key}
+                onClick={() => setTab(t.key)}
+                className={`group flex shrink-0 items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors md:w-full ${
+                  active
+                    ? 'bg-brand-maroon/10 text-brand-maroon'
+                    : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'
+                }`}
+              >
+                <Icon
+                  size={18}
+                  className={
+                    active ? 'text-brand-maroon' : 'text-gray-400 group-hover:text-gray-600'
+                  }
+                />
+                <span className="whitespace-nowrap">{t.label}</span>
+              </button>
+            );
+          })}
+        </nav>
+        <div className="hidden items-center gap-2 border-t p-4 md:flex">
+          <UserButton />
+          <span className="text-xs text-gray-500">Account</span>
         </div>
-      ) : null}
+      </aside>
 
-      {isCoach ? (
-        <div className="mb-6 flex gap-2 border-b">
-          {(['plan', 'roster'] as const).map((v) => (
-            <button
-              key={v}
-              onClick={() => setView(v)}
-              className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium ${
-                view === v
-                  ? 'border-brand-maroon text-brand-maroon'
-                  : 'border-transparent text-gray-500'
-              }`}
-            >
-              {v === 'plan' ? 'Plan' : 'Roster & Squads'}
-            </button>
-          ))}
-        </div>
-      ) : null}
-
-      {isCoach && view === 'plan' ? <PlanGrid teamId={teamId} /> : null}
-
-      {!isCoach || view === 'roster' ? (
-        <>
-          {isCoach ? (
-            <section className="mb-8 rounded-lg border p-5">
-              <h2 className="mb-3 text-lg font-semibold">Join codes</h2>
-              <div className="flex flex-wrap gap-6">
-                {(['athlete', 'coach'] as const).map((role) => {
-                  const jc = codes.find((c) => c.role === role);
-                  return (
-                    <div key={role} className="flex items-center gap-3">
-                      <span className="w-16 text-sm capitalize text-gray-600">{role}</span>
-                      <code className="rounded bg-gray-100 px-3 py-1.5 text-lg font-semibold tracking-widest text-brand-forest">
-                        {jc?.code ?? '—'}
-                      </code>
-                      {jc ? (
-                        <button
-                          onClick={() => void copyCode(jc.code)}
-                          className={`rounded border px-2 py-1 text-xs ${
-                            copied === jc.code
-                              ? 'border-brand-green/40 text-brand-green'
-                              : 'border-gray-300 text-gray-700'
-                          }`}
-                        >
-                          {copied === jc.code ? 'Copied!' : 'Copy'}
-                        </button>
-                      ) : null}
-                      <button
-                        onClick={() => void regenerate(role)}
-                        className="rounded border border-brand-crimson/30 px-2 py-1 text-xs text-brand-crimson"
-                        title="Invalidates the current code immediately"
-                      >
-                        Regenerate
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-              <p className="mt-2 text-xs text-gray-500">
-                Share the athlete code with your roster. Regenerating invalidates the old code.
-              </p>
-            </section>
-          ) : null}
-
-          <section className="mb-8 rounded-lg border p-5">
-            <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Roster ({roster.length})</h2>
-              {isCoach ? (
-                <div className="flex gap-2">
-                  <input
-                    className="rounded border px-2 py-1 text-sm"
-                    placeholder="New squad name"
-                    value={newSquad}
-                    onChange={(e) => setNewSquad(e.target.value)}
-                  />
-                  <button
-                    onClick={() => void createSquad()}
-                    className="rounded bg-brand-green px-3 py-1 text-sm text-white"
-                  >
-                    Add squad
-                  </button>
-                </div>
-              ) : null}
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b text-left text-gray-500">
-                    <th className="py-2 pr-4">Name</th>
-                    <th className="py-2 pr-4">Role</th>
-                    <th className="py-2 pr-4">Class</th>
-                    {isCoach
-                      ? squads.map((s) => (
-                          <th key={s.id} className="py-2 pr-2 text-center">
-                            <span className="mr-1">{s.name}</span>
-                            <button
-                              onClick={() => void deleteSquad(s.id)}
-                              className="text-xs text-brand-crimson"
-                              title={`Delete squad ${s.name}`}
-                            >
-                              ×
-                            </button>
-                          </th>
-                        ))
-                      : null}
-                    {isCoach ? <th className="py-2" /> : null}
-                  </tr>
-                </thead>
-                <tbody>
-                  {roster.map((r) => (
-                    <tr key={r.id} className="border-b last:border-0">
-                      <td className="py-2 pr-4 font-medium">{r.user.name}</td>
-                      <td className="py-2 pr-4 capitalize">{r.role}</td>
-                      <td className="py-2 pr-4">{r.user.class_year ?? '—'}</td>
-                      {isCoach
-                        ? squads.map((s) => (
-                            <td key={s.id} className="py-2 pr-2 text-center">
-                              <input
-                                type="checkbox"
-                                checked={s.member_ids.includes(r.id)}
-                                onChange={(e) => void toggleSquad(s, r.id, e.target.checked)}
-                              />
-                            </td>
-                          ))
-                        : null}
-                      {isCoach ? (
-                        <td className="py-2 text-right">
-                          {r.id !== myMemberId ? (
-                            <button
-                              onClick={() => void removeMember(r.id)}
-                              className="rounded border border-brand-crimson/30 px-2 py-0.5 text-xs text-brand-crimson"
-                            >
-                              Remove
-                            </button>
-                          ) : null}
-                        </td>
-                      ) : null}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-
-          {!isCoach ? (
-            <button
-              onClick={() => void leaveTeam()}
-              className="text-sm text-brand-crimson underline"
-            >
-              Leave team
-            </button>
-          ) : null}
-        </>
-      ) : null}
-    </main>
+      {/* Main pane */}
+      <main className="min-w-0 flex-1 p-4 md:p-6">
+        {tab === 'dashboard' && isCoach ? <ComplianceTab membership={membership} /> : null}
+        {tab === 'plan' && isCoach ? <PlanGrid teamId={membership.team.id} /> : null}
+        {tab === 'meets' ? <MeetsTab membership={membership} /> : null}
+        {tab === 'feed' ? <FeedTab membership={membership} /> : null}
+        {tab === 'injury' && isCoach ? <InjuryTab membership={membership} /> : null}
+        {tab === 'messages' ? <MessagesTab membership={membership} /> : null}
+        {tab === 'announcements' ? <AnnouncementsTab membership={membership} /> : null}
+        {tab === 'schedule' ? <ScheduleTab membership={membership} /> : null}
+        {tab === 'roster' ? <RosterTab membership={membership} onChanged={onChanged} /> : null}
+        {tab === 'settings' ? <SettingsTab membership={membership} onChanged={onChanged} /> : null}
+      </main>
+    </div>
   );
 }

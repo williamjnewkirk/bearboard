@@ -3,6 +3,7 @@ import { BRAND_COLORS } from '@bearboard/shared';
 import { useState } from 'react';
 import {
   ActivityIndicator,
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -11,6 +12,8 @@ import {
   TextInput,
   View,
 } from 'react-native';
+
+const logo = require('../../assets/logo.png');
 
 type Mode = 'signIn' | 'signUp';
 
@@ -100,7 +103,9 @@ export function SignInScreen() {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
+      <Image source={logo} style={styles.logo} />
       <Text style={styles.title}>BearBoard</Text>
+      <Text style={styles.tagline}>The plan, the runs, and the team — in one place.</Text>
 
       {pendingVerification ? (
         <>
@@ -196,13 +201,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: BRAND_COLORS.white,
   },
+  logo: { width: 84, height: 84, borderRadius: 20, alignSelf: 'center', marginBottom: 4 },
   title: {
     fontSize: 32,
-    fontWeight: '700',
+    fontWeight: '800',
     textAlign: 'center',
-    marginBottom: 8,
-    color: BRAND_COLORS.maroon,
+    color: BRAND_COLORS.crimson,
   },
+  tagline: { fontSize: 14, color: '#666', textAlign: 'center', marginBottom: 10 },
   subtitle: { fontSize: 15, color: '#444', textAlign: 'center' },
   input: {
     borderWidth: 1,

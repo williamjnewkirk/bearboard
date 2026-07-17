@@ -3,6 +3,7 @@
 import { useUser, UserButton } from '@clerk/nextjs';
 import { useState } from 'react';
 import { useSupabase } from '@/lib/useSupabase';
+import { Logo } from './Logo';
 
 /**
  * First-run: create a team (become its coach) or join with a code (role is
@@ -12,19 +13,25 @@ export function Onboarding({ onJoined }: { onJoined: () => void }) {
   const { user } = useUser();
   const getSupabase = useSupabase();
 
+  const [step, setStep] = useState<'team' | 'profile'>('team');
+  const [role, setRole] = useState<'coach' | 'athlete'>('athlete');
   const [code, setCode] = useState('');
   const [teamName, setTeamName] = useState('');
   const [school, setSchool] = useState('');
-  const [busy, setBusy] = useState<'join' | 'create' | null>(null);
+  const [busy, setBusy] = useState<'join' | 'create' | 'profile' | null>(null);
   const [error, setError] = useState<string>('');
 
   const userName = user?.fullName ?? user?.firstName ?? null;
+  const [name, setName] = useState(userName ?? '');
+  const [classYear, setClassYear] = useState('');
+  const [events, setEvents] = useState('');
+  const [title, setTitle] = useState('');
 
   async function join() {
     setBusy('join');
     setError('');
     const sb = await getSupabase();
-    const { error } = await sb.rpc('join_team_with_code', {
+    const { data, error } = await sb.rpc('join_team_with_code', {
       p_code: code,
       p_user_name: userName,
     });
@@ -37,7 +44,8 @@ export function Onboarding({ onJoined }: { onJoined: () => void }) {
       );
       return;
     }
-    onJoined();
+    setRole((data as { role?: 'coach' | 'athlete' } | null)?.role ?? 'athlete');
+    setStep('profile');
   }
 
   async function create() {
@@ -54,18 +62,109 @@ export function Onboarding({ onJoined }: { onJoined: () => void }) {
       setError(`Create failed: ${error.message}`);
       return;
     }
+    setRole('coach');
+    setStep('profile');
+  }
+
+  async function saveProfile() {
+    setBusy('profile');
+    setError('');
+    const sb = await getSupabase();
+    const { error } = await sb.rpc('update_profile', {
+      p_name: name,
+      p_class_year: role === 'athlete' ? classYear : null,
+      p_events: role === 'athlete' ? events : null,
+      p_title: role === 'coach' ? title : null,
+    });
+    setBusy(null);
+    if (error) {
+      setError(`Save failed: ${error.message}`);
+      return;
+    }
     onJoined();
+  }
+
+  if (step === 'profile') {
+    return (
+      <main className="mx-auto max-w-lg p-6">
+        <header className="mb-8 flex items-center justify-between">
+          <Logo size={36} />
+          <UserButton />
+        </header>
+        <h2 className="mb-1 text-2xl font-bold text-brand-forest">You&apos;re in! 🎉</h2>
+        <p className="mb-6 text-gray-600">
+          {role === 'coach'
+            ? 'Set up your coach profile so your team knows who’s posting.'
+            : 'Fill out your profile so your coach knows who you are.'}
+        </p>
+        {error ? (
+          <div className="mb-4 rounded border border-brand-crimson/30 bg-brand-crimson/5 p-3 text-sm text-brand-crimson">
+            {error}
+          </div>
+        ) : null}
+        <label className="mb-1 block text-sm font-medium text-gray-700">Full name</label>
+        <input
+          className="mb-4 w-full rounded border px-3 py-2"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+        {role === 'athlete' ? (
+          <>
+            <label className="mb-1 block text-sm font-medium text-gray-700">Class year</label>
+            <input
+              className="mb-4 w-full rounded border px-3 py-2"
+              placeholder="2028"
+              value={classYear}
+              onChange={(e) => setClassYear(e.target.value)}
+            />
+            <label className="mb-1 block text-sm font-medium text-gray-700">Events</label>
+            <input
+              className="mb-4 w-full rounded border px-3 py-2"
+              placeholder="5k / 10k, steeple"
+              value={events}
+              onChange={(e) => setEvents(e.target.value)}
+            />
+          </>
+        ) : (
+          <>
+            <label className="mb-1 block text-sm font-medium text-gray-700">Title</label>
+            <input
+              className="mb-4 w-full rounded border px-3 py-2"
+              placeholder="Head Coach"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
+          </>
+        )}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => void saveProfile()}
+            disabled={busy !== null}
+            className="rounded bg-brand-maroon px-4 py-2 font-medium text-white disabled:opacity-50"
+          >
+            {busy === 'profile' ? 'Saving…' : 'Enter BearBoard'}
+          </button>
+          <button onClick={() => onJoined()} className="text-sm text-gray-500 underline">
+            Skip for now
+          </button>
+        </div>
+      </main>
+    );
   }
 
   return (
     <main className="mx-auto max-w-3xl p-6">
       <header className="mb-8 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-brand-maroon">BearBoard</h1>
+        <Logo size={36} />
         <UserButton />
       </header>
 
+      <p className="mb-1 text-lg font-semibold text-brand-forest">
+        Welcome{userName ? `, ${userName}` : ''} 👋
+      </p>
       <p className="mb-6 text-gray-600">
-        Welcome{userName ? `, ${userName}` : ''}. Join your team with a code, or create a new team.
+        The plan, the runs, and the team — finally in one place. Join your team with a code, or
+        create a new team and bring your roster in.
       </p>
 
       {error ? (

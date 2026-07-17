@@ -3,6 +3,7 @@ import { BRAND_COLORS } from '@bearboard/shared';
 import { useState } from 'react';
 import {
   ActivityIndicator,
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -12,6 +13,8 @@ import {
   View,
 } from 'react-native';
 import { useSupabase } from '../lib/useSupabase';
+
+const logo = require('../../assets/logo.png');
 
 type Mode = 'join' | 'create';
 
@@ -23,6 +26,8 @@ export function OnboardingScreen({ onJoined }: { onJoined: () => void }) {
   const { signOut } = useAuth();
   const getSupabase = useSupabase();
 
+  const [step, setStep] = useState<'team' | 'profile'>('team');
+  const [role, setRole] = useState<'coach' | 'athlete'>('athlete');
   const [mode, setMode] = useState<Mode>('join');
   const [code, setCode] = useState('');
   const [teamName, setTeamName] = useState('');
@@ -30,13 +35,19 @@ export function OnboardingScreen({ onJoined }: { onJoined: () => void }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
+  // Profile step fields.
+  const [name, setName] = useState(user?.fullName ?? user?.firstName ?? '');
+  const [classYear, setClassYear] = useState('');
+  const [events, setEvents] = useState('');
+  const [title, setTitle] = useState('');
+
   const userName = user?.fullName ?? user?.firstName ?? null;
 
   async function join() {
     setBusy(true);
     setError('');
     const sb = await getSupabase();
-    const { error } = await sb.rpc('join_team_with_code', {
+    const { data, error } = await sb.rpc('join_team_with_code', {
       p_code: code,
       p_user_name: userName,
     });
@@ -49,7 +60,8 @@ export function OnboardingScreen({ onJoined }: { onJoined: () => void }) {
       );
       return;
     }
-    onJoined();
+    setRole((data as { role?: 'coach' | 'athlete' } | null)?.role ?? 'athlete');
+    setStep('profile');
   }
 
   async function create() {
@@ -66,7 +78,84 @@ export function OnboardingScreen({ onJoined }: { onJoined: () => void }) {
       setError(`Create failed: ${error.message}`);
       return;
     }
+    setRole('coach');
+    setStep('profile');
+  }
+
+  async function saveProfile() {
+    setBusy(true);
+    setError('');
+    const sb = await getSupabase();
+    const { error } = await sb.rpc('update_profile', {
+      p_name: name,
+      p_class_year: role === 'athlete' ? classYear : null,
+      p_events: role === 'athlete' ? events : null,
+      p_title: role === 'coach' ? title : null,
+    });
+    setBusy(false);
+    if (error) {
+      setError(`Save failed: ${error.message}`);
+      return;
+    }
     onJoined();
+  }
+
+  if (step === 'profile') {
+    return (
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <Image source={logo} style={styles.logo} />
+        <Text style={styles.title}>You're in! 🎉</Text>
+        <Text style={styles.subtitle}>
+          {role === 'coach'
+            ? 'Set up your coach profile so your team knows who’s posting.'
+            : 'Fill out your profile so your coach knows who you are.'}
+        </Text>
+
+        <TextInput
+          style={styles.input}
+          placeholder="Full name"
+          placeholderTextColor={PLACEHOLDER}
+          value={name}
+          onChangeText={setName}
+        />
+        {role === 'athlete' ? (
+          <>
+            <TextInput
+              style={styles.input}
+              placeholder="Class year (e.g. 2028)"
+              placeholderTextColor={PLACEHOLDER}
+              keyboardType="number-pad"
+              value={classYear}
+              onChangeText={setClassYear}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Events (e.g. 5k / 10k, steeple)"
+              placeholderTextColor={PLACEHOLDER}
+              value={events}
+              onChangeText={setEvents}
+            />
+          </>
+        ) : (
+          <TextInput
+            style={styles.input}
+            placeholder="Title (e.g. Head Coach)"
+            placeholderTextColor={PLACEHOLDER}
+            value={title}
+            onChangeText={setTitle}
+          />
+        )}
+
+        <PrimaryButton label="Enter BearBoard" onPress={saveProfile} busy={busy} />
+        <Pressable onPress={() => onJoined()} disabled={busy}>
+          <Text style={styles.signOut}>Skip for now</Text>
+        </Pressable>
+        {error ? <Text style={styles.error}>{error}</Text> : null}
+      </KeyboardAvoidingView>
+    );
   }
 
   return (
@@ -74,9 +163,11 @@ export function OnboardingScreen({ onJoined }: { onJoined: () => void }) {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
+      <Image source={logo} style={styles.logo} />
       <Text style={styles.title}>BearBoard</Text>
       <Text style={styles.subtitle}>
-        Welcome{userName ? `, ${userName}` : ''}. Join your team or create one.
+        Welcome{userName ? `, ${userName}` : ''} 👋 Join your team with the code your coach shared,
+        or create a new team.
       </Text>
 
       <View style={styles.tabs}>
@@ -175,7 +266,8 @@ const styles = StyleSheet.create({
     gap: 12,
     backgroundColor: BRAND_COLORS.white,
   },
-  title: { fontSize: 32, fontWeight: '700', textAlign: 'center', color: BRAND_COLORS.maroon },
+  logo: { width: 72, height: 72, borderRadius: 18, alignSelf: 'center' },
+  title: { fontSize: 32, fontWeight: '800', textAlign: 'center', color: BRAND_COLORS.crimson },
   subtitle: { fontSize: 15, color: '#444', textAlign: 'center', marginBottom: 8 },
   tabs: { flexDirection: 'row', gap: 8, marginBottom: 4 },
   tab: {

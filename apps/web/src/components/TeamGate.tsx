@@ -6,6 +6,7 @@ import { useSupabase } from '@/lib/useSupabase';
 import type { Membership } from '@/lib/team-types';
 import { Onboarding } from './Onboarding';
 import { Dashboard } from './Dashboard';
+import { LogoMark } from './Logo';
 
 type GateState = 'loading' | 'error' | 'no-team' | 'member';
 
@@ -41,7 +42,9 @@ export function TeamGate() {
 
       const { data, error: memError } = await sb
         .from('team_members')
-        .select('id, role, team:teams(id, name, school)')
+        .select(
+          'id, role, team:teams(id, name, school, timezone, feed_visible_to_athletes, split_nudge_enabled)',
+        )
         .eq('user_id', user.id)
         .eq('status', 'active');
       if (memError) {
@@ -79,7 +82,14 @@ export function TeamGate() {
   }, [isLoaded, user?.id]);
 
   if (!isLoaded || state === 'loading') {
-    return <Centered>Loading…</Centered>;
+    return (
+      <Centered>
+        <div className="flex flex-col items-center gap-3">
+          <LogoMark size={56} className="animate-pulse" />
+          <p className="text-sm text-gray-500">Loading your team…</p>
+        </div>
+      </Centered>
+    );
   }
 
   if (state === 'error') {
